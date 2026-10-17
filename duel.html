@@ -798,7 +798,7 @@ function refreshLobby(){
 }
 refreshLobby();
 initNet();
-if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+if('serviceWorker' in navigator&&location.protocol.startsWith('http')){/* 앱 파일이 새 버전으로 바뀌면 한 번 자동으로 새로고침해요 (대결 중에는 하지 않아요) */const sw=navigator.serviceWorker,had=!!sw.controller;let done=false;sw.addEventListener('controllerchange',()=>{if(!had||done||A.kind==='net'||(A.kind==='ai'&&A.S&&!A.S.over))return;done=true;location.reload()});sw.register('sw.js').catch(()=>{})}
 </script>
 </body>
 </html>

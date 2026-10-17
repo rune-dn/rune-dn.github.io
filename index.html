@@ -719,7 +719,7 @@ $('#clr').onclick=()=>{T=[];tray()};
 build();render();tray();renderCodex();
 // 앱으로 설치해 열었을 때는 대결도 같은 창에서 열어요
 try{if(matchMedia('(display-mode: standalone)').matches||navigator.standalone)$('#playbtn').removeAttribute('target')}catch(e){}
-if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+if('serviceWorker' in navigator&&location.protocol.startsWith('http')){/* 앱 파일이 새 버전으로 바뀌면 한 번 자동으로 새로고침해요 */const sw=navigator.serviceWorker,had=!!sw.controller;let done=false;sw.addEventListener('controllerchange',()=>{if(!had||done)return;done=true;location.reload()});sw.register('sw.js').catch(()=>{})}
 </script>
 </body>
 </html>

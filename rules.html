@@ -218,6 +218,6 @@ svg .nm{font-family:var(--f-body);font-size:13px;font-weight:700;fill:var(--ink)
     <li><b>10라운드가 끝나면</b>: 체력이 많은 쪽이 이겨요. 같으면 무승부예요.</li>
   </ul>
 </div>
-<script>if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});</script>
+<script>if('serviceWorker' in navigator&&location.protocol.startsWith('http')){/* 앱 파일이 새 버전으로 바뀌면 한 번 자동으로 새로고침해요 */const sw=navigator.serviceWorker,had=!!sw.controller;let done=false;sw.addEventListener('controllerchange',()=>{if(!had||done)return;done=true;location.reload()});sw.register('sw.js').catch(()=>{})}</script>
 </body>
 </html>
