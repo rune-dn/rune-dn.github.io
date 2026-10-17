@@ -88,6 +88,10 @@ button:focus-visible,input:focus-visible,canvas:focus-visible{outline:2px solid 
 .card b{font:400 30px/1.15 var(--f-rune);color:var(--rune)}
 .card.sel{outline:2px solid var(--accent);outline-offset:-2px;background:var(--bg)}
 .card .ord{font-size:11px;color:var(--accent);font-weight:700;min-height:1em}
+/* 카드 맨 위에 원소·효과·형태, 고른 순서는 오른쪽 위 모서리에 */
+.card{position:relative}
+.card .cat{font-size:11px;font-weight:700;line-height:1.2;color:var(--c);letter-spacing:.04em}
+.card .ord{position:absolute;top:5px;right:7px;min-height:0;font-size:12px;line-height:1}
 .card:disabled{opacity:.4;cursor:default}
 .card[data-g="원소"]{--c:var(--el)}.card[data-g="강화"]{--c:var(--buf)}.card[data-g="회복·보호"]{--c:var(--heal)}.card[data-g="제어"]{--c:var(--ctl)}.card[data-g="신비"]{--c:var(--mys)}.card[data-g="형태"]{--c:var(--fo)}
 .acts{display:flex;gap:8px;flex-wrap:wrap}
@@ -634,7 +638,7 @@ function renderHand(){
   p.hand.forEach((i,pos)=>{
     const b=el('button','card');b.type='button';b.dataset.g=D[i][4];
     const k=A.sel.indexOf(pos);if(k>=0)b.classList.add('sel');
-    b.append(el('span','ord',k>=0?String(k+1):''),el('b',null,D[i][0]),el('span',null,D[i][2]));
+    b.append(el('span','cat',D[i][3]),el('span','ord',k>=0?String(k+1):''),el('b',null,D[i][0]),el('span',null,D[i][2]));
     b.disabled=A.confirmed;b.setAttribute('aria-pressed',String(k>=0));
     b.onclick=()=>{if(A.confirmed)return;const j=A.sel.indexOf(pos);if(j>=0)A.sel.splice(j,1);else if(A.sel.length<5)A.sel.push(pos);renderCombo();renderHand()};
     box.append(b);
