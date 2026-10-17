@@ -1,7 +1,7 @@
 {
-  "name": "룬어 사전",
-  "short_name": "룬어",
-  "description": "실제 룬 문자로 만든 판타지 룬어 사전과 룬 대결",
+  "name": "룬 사전",
+  "short_name": "룬 사전",
+  "description": "실제 룬 문자로 만든 판타지 룬 사전과 룬 대결",
   "lang": "ko",
   "start_url": "./",
   "scope": "./",
