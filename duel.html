@@ -285,7 +285,7 @@ function nameOf(ix){
 }
 
 /* ───── 규칙 엔진 (규칙서 최종본) ───── */
-const HPMAX=100,DIV=3,HEALDIV=1.75,REVIVE_HP=20,PURE_HEAL=5,SPIRIT_DIV=12,ROUNDS=10,HAND=7,ROUND_MS=60000;
+const HPMAX=100,DIV=3,HEALDIV=1.75,REVIVE_HP=20,PURE_HEAL=5,SPIRIT_DIV=12,HAND=7,ROUND_MS=60000;
 const BEATS={물:'불',불:'나무',나무:'땅',땅:'바람',바람:'번개',번개:'물'};
 const OPP=[['치유','재앙'],['수호','재앙'],['정지','이동'],['성장','정지'],['각성','속박'],['원초적 힘','정신'],['치유','흡수'],['맹세','변환']];
 const RK={원소:0,효과:1,형태:2};
@@ -419,7 +419,6 @@ function resolve(S0,sub){
   S.last={round:S.round,play:C0,shown:C,pw,hp0,hp1:{h:P.h.hp,g:P.g.hp},events:E};
   const hd=P.h.hp<=0,gd=P.g.hp<=0;
   if(hd||gd)S.over={winner:hd&&gd?(P.h.hp>P.g.hp?'h':P.g.hp>P.h.hp?'g':'draw'):(hd?'g':'h'),reason:hd&&gd?'double':'ko'};
-  else if(S.round>=ROUNDS)S.over={winner:P.h.hp>P.g.hp?'h':P.g.hp>P.h.hp?'g':'draw',reason:'time'};
   else{S.round++;draw(P.h);draw(P.g)}
   return S;
 }
@@ -584,7 +583,7 @@ function statusChips(p,isMe){
 function renderWho(box,p,label){box.replaceChildren();const h=el('div','who-h');h.append(el('b',null,label),el('span','hpnum',`체력 ${Math.max(0,p.hp)} / ${HPMAX}`));box.append(h,hpBar(p),statusChips(p))}
 function renderPlay(){
   const S=A.S,me=A.seat,op=me==='h'?'g':'h',P=S.P;
-  $('#round-lab').textContent=`라운드 ${S.round} / ${ROUNDS}`;
+  $('#round-lab').textContent=`라운드 ${S.round}`;
   renderWho($('#opp'),P[op],A.kind==='ai'?'컴퓨터':'상대');
   renderWho($('#me'),P[me],'나');
   const f=$('#field');f.hidden=!S.field;if(S.field)f.textContent=`영역: ${S.field.el} · ${S.field.turns}라운드 남음 · ${S.field.el} 공격 ×1.3`;

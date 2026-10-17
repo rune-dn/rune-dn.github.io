@@ -74,7 +74,7 @@ svg .nm{font-family:var(--f-body);font-size:13px;font-weight:700;fill:var(--ink)
   <table>
     <tr><th>항목</th><th>확정값</th></tr>
     <tr><td>체력</td><td>100</td></tr>
-    <tr><td>라운드</td><td>최대 10라운드, 라운드마다 60초</td></tr>
+    <tr><td>라운드</td><td>누군가 체력이 0이 될 때까지, 라운드마다 60초</td></tr>
     <tr><td>손패</td><td>라운드마다 새로 7개 (내 룬 주머니 41개에서)</td></tr>
     <tr><td>조합</td><td>원소 → 효과 → 형태 순서, 원소 3·효과 2·형태 1, 최대 5개</td></tr>
     <tr><td>피해</td><td>위력 ÷ 3 × 상성 (반올림)</td></tr>
@@ -217,7 +217,6 @@ svg .nm{font-family:var(--f-body);font-size:13px;font-weight:700;fill:var(--ink)
   <p>상대 체력을 먼저 0 이하로 만들면 이겨요.</p>
   <ul>
     <li><b>둘 다 쓰러지면</b>: 체력이 덜 깎인 쪽(마이너스가 작은 쪽)이 이겨요. 같으면 무승부예요. 부활이 대기 중인 쪽은 먼저 살아나요.</li>
-    <li><b>10라운드가 끝나면</b>: 체력이 많은 쪽이 이겨요. 같으면 무승부예요.</li>
   </ul>
 </div>
 <script>if('serviceWorker' in navigator&&location.protocol.startsWith('http')){/* 앱 파일이 새 버전으로 바뀌면 한 번 자동으로 새로고침해요 */const sw=navigator.serviceWorker,had=!!sw.controller;let done=false;sw.addEventListener('controllerchange',()=>{if(!had||done)return;done=true;location.reload()});sw.register('sw.js').catch(()=>{})}</script>
