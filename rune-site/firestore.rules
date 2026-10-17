@@ -1,0 +1,44 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 대결 방: duel/{6자리 코드}
+    match /duel/{code} {
+      // 코드를 아는 사람은 방을 찾을 수 있어요
+      allow read: if request.auth != null;
+
+      // 방 만들기: 방장은 자기 자신, 참가자 자리는 비워 둬요
+      allow create: if request.auth != null
+        && code.matches('^[A-Z0-9]{6}$')
+        && request.resource.data.hostId == request.auth.uid
+        && request.resource.data.guestId == null;
+
+      // 방장은 대결 상태를 저장할 수 있어요(방장·참가자는 바꿀 수 없어요)
+      // 참가자는 빈자리에 자기 자신을 넣는 것만 할 수 있어요
+      allow update: if request.auth != null && (
+        (resource.data.hostId == request.auth.uid
+          && request.resource.data.hostId == resource.data.hostId
+          && request.resource.data.guestId == resource.data.guestId)
+        || (resource.data.guestId == null
+          && request.resource.data.guestId == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['guestId']))
+      );
+
+      allow delete: if request.auth != null && resource.data.hostId == request.auth.uid;
+
+      // 각자 낸 조합: duel/{코드}/sub/h(방장), sub/g(참가자)
+      match /sub/{seat} {
+        function room() {
+          return get(/databases/$(database)/documents/duel/$(code)).data;
+        }
+        // 방에 들어간 두 사람만 볼 수 있어요
+        allow read: if request.auth != null
+          && (room().hostId == request.auth.uid || room().guestId == request.auth.uid);
+        // 자기 자리에만 낼 수 있어요
+        allow write: if request.auth != null
+          && ((seat == 'h' && room().hostId == request.auth.uid)
+            || (seat == 'g' && room().guestId == request.auth.uid));
+      }
+    }
+  }
+}

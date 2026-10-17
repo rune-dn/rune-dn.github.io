@@ -1,0 +1,804 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>룬 대결</title>
+<meta name="description" content="룬을 조합해 친구와 겨루는 동시 공개 대결">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#e9ebee" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141a26" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="룬어">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+Runic&display=swap">
+<style>
+/* 레이아웃: 위에 상대, 가운데 지난 라운드 결과, 아래에 나와 손패. 한 손으로 위아래만 훑는 세로 한 줄 */
+:root{
+  --bg:#e9ebee;--card:#f6f7f9;--ink:#1c2230;--mute:#566074;--line:#cfd4dc;--rune:#243049;--accent:#9a6a18;
+  --el:#1b767c;--buf:#b0560f;--heal:#2e7a39;--ctl:#2f5cb0;--mys:#a8367a;--fo:#7a4fb0;
+  --good:#2e7a39;--warn:#a86a10;--bad:#c2414b;
+  --f-body:'Gowun Batang','Noto Serif KR',serif;--f-rune:'Noto Sans Runic','Segoe UI Historic','Segoe UI Symbol',sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141a26;--card:#1d2536;--ink:#e6e9f0;--mute:#9aa4b8;--line:#2c3650;--rune:#dfe6f5;--accent:#e0b058;--el:#52c3c9;--buf:#f0a35a;--heal:#72c77f;--ctl:#86a8f2;--mys:#f08cc4;--fo:#b995ec;--good:#72c77f;--warn:#e0b058;--bad:#f07a82;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#141a26;--card:#1d2536;--ink:#e6e9f0;--mute:#9aa4b8;--line:#2c3650;--rune:#dfe6f5;--accent:#e0b058;--el:#52c3c9;--buf:#f0a35a;--heal:#72c77f;--ctl:#86a8f2;--mys:#f08cc4;--fo:#b995ec;--good:#72c77f;--warn:#e0b058;--bad:#f07a82;color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--f-body);margin:0}
+.wrap{max-width:760px;margin:0 auto;padding-block:16px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1{font-size:28px;margin:4px 0 2px;text-wrap:balance}
+h2{font-size:19px;margin:0 0 8px}
+p{margin:6px 0}
+a{color:var(--accent)}
+.sub{color:var(--mute);font-size:14px}
+.top{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.links{display:flex;gap:12px;font-size:14px}
+button,input{font:inherit;color:inherit}
+button:focus-visible,input:focus-visible,canvas:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:700}
+.btn.main{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.warn{color:var(--bad);border-color:var(--bad);background:transparent}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.sm{padding:7px 10px;font-size:14px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.stack{display:grid;gap:12px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.lobby{display:grid;gap:12px;margin-top:14px}
+.lobby .panel p{color:var(--mute);font-size:14px}
+#code-in{width:9.5em;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);text-transform:uppercase;letter-spacing:.2em;font-weight:700}
+.msg{font-size:14px;color:var(--bad);min-height:1.2em}
+.note{font-size:13px;color:var(--mute)}
+.codebig{font:700 40px/1.1 var(--f-body);letter-spacing:.18em;font-variant-numeric:tabular-nums}
+/* 대결 */
+.bar-top{display:flex;justify-content:space-between;align-items:center;font-size:14px;color:var(--mute);margin:10px 0 8px}
+.timer{font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink)}
+.timer.low{color:var(--bad)}
+.who{display:grid;gap:6px}
+.who-h{display:flex;justify-content:space-between;align-items:baseline}
+.who-h b{font-size:17px}
+.hpnum{font-variant-numeric:tabular-nums;font-weight:700}
+.hp{height:12px;border-radius:6px;background:var(--line);overflow:hidden}
+.hp i{display:block;height:100%;background:var(--good);transition:width .5s ease}
+.hp i.mid{background:var(--warn)}.hp i.low{background:var(--bad)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:2px 9px;color:var(--mute)}
+.chip.on{color:var(--ink);border-color:var(--accent)}
+.field{font-size:13px;text-align:center;color:var(--ink);border:1px dashed var(--accent);border-radius:999px;padding:4px 10px;justify-self:center}
+.reveal h3{font-size:15px;margin:0 0 6px;color:var(--mute)}
+.play-row{display:grid;grid-template-columns:3.2em 1fr;gap:4px 10px;align-items:baseline;margin:4px 0}
+.play-row .lab{font-size:13px;color:var(--mute)}
+.g{font-family:var(--f-rune);color:var(--rune);letter-spacing:2px}
+.play-row .g{font-size:22px}
+.play-row .nm{font-weight:700}
+.play-row .meta{font-size:13px;color:var(--mute)}
+.evs{margin:8px 0 0;padding-left:18px;font-size:14px}
+.evs li{margin:2px 0}
+.combo{display:grid;gap:6px}
+.combo-g{font-family:var(--f-rune);font-size:32px;color:var(--rune);letter-spacing:4px;min-height:40px}
+.combo-n{font-weight:700;font-size:17px}
+.combo-m{font-size:14px;color:var(--mute)}
+.combo-e{font-size:13px;color:var(--mute);margin:0;padding-left:18px}
+.err{font-size:14px;color:var(--bad);font-weight:700}
+.hand{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:8px}
+.card{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border:1px solid var(--line);border-top:4px solid var(--c);border-radius:10px;background:var(--card);cursor:pointer;font-size:13px;word-break:keep-all;text-align:center;touch-action:manipulation}
+.card b{font:400 30px/1.15 var(--f-rune);color:var(--rune)}
+.card.sel{outline:2px solid var(--accent);outline-offset:-2px;background:var(--bg)}
+.card .ord{font-size:11px;color:var(--accent);font-weight:700;min-height:1em}
+.card:disabled{opacity:.4;cursor:default}
+.card[data-g="원소"]{--c:var(--el)}.card[data-g="강화"]{--c:var(--buf)}.card[data-g="회복·보호"]{--c:var(--heal)}.card[data-g="제어"]{--c:var(--ctl)}.card[data-g="신비"]{--c:var(--mys)}.card[data-g="형태"]{--c:var(--fo)}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.acts .btn{flex:1 1 auto}
+.padbox{display:flex;gap:8px;justify-content:center;align-items:flex-start}
+#pad{touch-action:none;background:var(--bg);border:1px solid var(--line);border-radius:12px;cursor:crosshair;flex:none}
+.padside{width:76px;display:flex;flex-direction:column;gap:6px}
+.padside .btn{padding:8px 4px}
+.padres{font-size:13px;color:var(--mute);min-height:2.6em}
+.alt{display:flex;flex-direction:column;align-items:center;padding:4px;border:1px solid var(--line);border-radius:8px;background:var(--card);cursor:pointer;font-size:12px}
+.alt b{font:400 22px/1.1 var(--f-rune);color:var(--rune)}
+.wait{font-size:14px;color:var(--mute)}
+.over{text-align:center}
+.over .big{font-size:34px;font-weight:700;margin:6px 0}
+.ov{position:fixed;inset:0;background:rgba(10,14,22,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10}
+.ov .panel{max-width:440px;width:100%}
+@media (prefers-reduced-motion:reduce){.hp i{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div><h1>룬 대결</h1><div class="sub">룬을 조합해 동시에 공개하고, 상대 체력 100을 먼저 0으로 만들면 이겨요.</div></div>
+    <div class="links"><a href="index.html">룬어 사전</a><a href="rules.html">규칙서</a></div>
+  </div>
+
+  <section id="v-lobby" class="lobby">
+    <div class="panel stack">
+      <h2>친구와 대결</h2>
+      <div class="row"><button class="btn main" id="b-create" type="button" disabled>방 만들기</button></div>
+      <div class="row"><input id="code-in" maxlength="6" placeholder="코드 6자리" autocomplete="off" aria-label="방 코드"><button class="btn" id="b-join" type="button" disabled>입장</button></div>
+      <div class="msg" id="lobby-msg" role="status"></div>
+      <p id="net-note">연결을 확인하는 중이에요.</p>
+      <div class="row" id="resume-row" hidden><button class="btn sm" id="b-resume" type="button">지난 방으로 돌아가기</button><span class="note" id="resume-code"></span></div>
+    </div>
+    <div class="panel stack">
+      <h2>혼자 연습</h2>
+      <p>컴퓨터와 같은 규칙으로 대결해요. 제한 시간은 없어요.</p>
+      <div class="row"><button class="btn" id="b-practice" type="button">컴퓨터와 연습</button></div>
+    </div>
+  </section>
+
+  <section id="v-wait" hidden>
+    <div class="panel stack" style="margin-top:14px">
+      <h2>대결 방</h2>
+      <div class="codebig" id="w-code"></div>
+      <div class="row"><button class="btn sm" id="b-copy" type="button">코드 복사</button><span class="note" id="copy-msg"></span></div>
+      <p class="wait" id="w-status"></p>
+      <div class="row"><button class="btn main" id="b-start" type="button" hidden>시작</button><button class="btn" id="b-leave1" type="button">방 나가기</button></div>
+    </div>
+  </section>
+
+  <section id="v-play" hidden>
+    <div class="bar-top"><span id="round-lab"></span><span class="timer" id="timer"></span></div>
+    <div class="stack">
+      <div class="panel who" id="opp"></div>
+      <div class="field" id="field" hidden></div>
+      <div class="panel reveal" id="reveal" hidden></div>
+      <div class="panel who" id="me"></div>
+      <div class="panel combo" id="combo"></div>
+      <div class="hand" id="hand"></div>
+      <div class="panel" id="padpanel" hidden>
+        <div class="padbox"><canvas id="pad" aria-label="룬을 새기는 판"></canvas><div class="padside" id="padside"><button class="btn sm" id="pad-go" type="button">알아보기</button><button class="btn sm" id="pad-clear" type="button">지우기</button></div></div>
+        <div class="padres" id="padres" aria-live="polite">손패에 있는 룬을 하나 그리고 잠시 기다리면 조합에 넣어요.</div>
+      </div>
+      <div class="acts">
+        <button class="btn" id="b-pad" type="button">각인</button>
+        <button class="btn" id="b-undo" type="button">되돌리기</button>
+        <button class="btn" id="b-clear" type="button">비우기</button>
+        <button class="btn" id="b-pass" type="button">쉬기</button>
+        <button class="btn main" id="b-confirm" type="button">확정</button>
+      </div>
+      <p class="wait" id="wait-msg" role="status"></p>
+      <div class="row"><button class="btn sm warn" id="b-leave2" type="button">대결 나가기</button></div>
+    </div>
+  </section>
+
+  <div class="ov" id="over" hidden><div class="panel over stack">
+    <div class="big" id="over-title"></div>
+    <p id="over-sub"></p>
+    <div class="row" style="justify-content:center"><button class="btn main" id="b-again" type="button">다시 하기</button><button class="btn" id="b-lobby" type="button">처음으로</button></div>
+    <p class="note" id="over-note"></p>
+  </div></div>
+</div>
+
+<script src="firebase-config.js"></script>
+<script>
+/* ───── 룬 데이터 (사전과 같아요) ───── */
+const D=[
+['ᚲ','카우나','불','원소','원소'],['ᛡ','이오르','물','원소','원소'],['ᚫ','애스크','바람','원소','원소'],['ᛠ','에아르','땅','원소','원소'],['ᚸ','가르','번개','원소','원소'],['ᚪ','아크','나무','원소','원소'],
+['ᚢ','우루즈','원초적 힘','효과','강화'],['ᛞ','다가즈','각성','효과','강화'],['ᚠ','페후','증폭','효과','강화'],['ᛏ','티와즈','맹세','효과','강화'],['ᛒ','베르카나','성장','효과','강화'],['ᛜ','잉와즈','잠재력','효과','강화'],
+['ᚹ','우은조','치유','효과','회복·보호'],['ᛇ','에이와즈','부활','효과','회복·보호'],['ᛊ','소윌로','정화','효과','회복·보호'],['ᛉ','알기즈','수호','효과','회복·보호'],
+['ᛁ','이사','정지','효과','제어'],['ᚾ','나우티즈','속박','효과','제어'],['ᛃ','예라','흡수','효과','제어'],['ᚷ','게보','계약','효과','제어'],
+['ᛗ','만나즈','정신','효과','신비'],['ᚨ','안수즈','예언','효과','신비'],['ᛈ','페르트','변환','효과','신비'],['ᚱ','라이도','이동','효과','신비'],
+['ᚺ','하갈라즈','재앙','형태','형태'],['ᛖ','에와즈','소환','형태','형태'],['ᛟ','오달라','영역','형태','형태'],['ᚦ','투리사즈','방어','형태','형태'],['ᛚ','라구즈','환영','형태','형태']];
+const KI=Object.fromEntries(D.map((r,i)=>[r[2],i]));
+const EFX={불:'나무를 이기고 물에 져요',물:'불을 이기고 번개에 져요',바람:'번개를 이기고 땅에 져요',땅:'바람을 이기고 나무에 져요',번개:'물을 이기고 바람에 져요',나무:'땅을 이기고 불에 져요',
+'원초적 힘':'위력 ×2.5 · 원소 필수, 다른 효과와 함께 못 써요',각성:'불·물이 있으면 위력 ×2, 없으면 ×1.2',증폭:'위력 ×1.5',맹세:'공격이 막히거나 회피·취소되면 다음 라운드 위력 ×2',성장:'땅·나무가 있으면 위력 ×2, 없으면 ×1.2',잠재력:'바람·번개가 있으면 위력 ×2, 없으면 ×1.2',
+치유:'위력 ÷ 1.75 회복, 나무와 함께면 +50% · 공격 안 함',부활:'쓰러지면 체력 20으로 부활(한 판 1번) · 불과 함께면 절반 피해로 공격',정화:'체력 5 회복 · 상대 제어와 내 폭주 피해를 막아요',수호:'이번 라운드 공격 1번을 완전히 막아요 · 연속 불가 · 공격 안 함',
+정지:'이번 라운드 양쪽 행동을 모두 취소 · 한 판 1번',속박:'다음 라운드 상대는 룬 1개만 · 연속 불가',흡수:'상대 방어막 절반을 빼앗거나, 준 피해의 절반만큼 회복',계약:'체력 10을 내고 다음 라운드 위력 ×2',
+정신:'이번 라운드 상대가 준 피해만큼 상대도 받아요',예언:'다음 라운드 상대 조합의 원소를 먼저 봐요',변환:'이번 라운드 상대 원소를 바꿔요',이동:'이번 라운드 받는 피해 절반',
+재앙:'수호·방어·이동을 무시하는 공격',소환:'원소와 함께면 정령이 3라운드 동안 위력 ÷ 12 피해 (원초적 힘이면 2배·4라운드)',영역:'3라운드 동안 그 원소 공격 ×1.3 (누구든)',방어:'이번 라운드 위력 ÷ 2만큼 막아요 · 공격 안 함',환영:'1번 더 공격(절반) · 수호와 함께면 공격 2번까지 막아요'};
+/* 사전의 조합 이름 */
+const NAMES={"0":"불꽃","1":"물줄기","2":"돌풍","3":"대지의 손","4":"전격","5":"새싹","6":"야수의 힘","7":"깨어남","8":"마력 증폭","9":"기사의 맹세","10":"성장","11":"잠재 개방","12":"치유","13":"부활","14":"정화","15":"수호","16":"정지","17":"속박","18":"흡수","19":"계약","20":"정신 감응","21":"예지","22":"변환","23":"순간 이동","24":"재앙","25":"소환","26":"영역 선포","27":"방벽","28":"환영","0,0":"맹화","1,1":"격류","2,2":"회오리","3,3":"대지 융기","4,4":"연쇄 번개","5,5":"거목","6,6":"광폭화","7,7":"초월","8,8":"극대화","9,9":"서약의 검","10,10":"급성장","11,11":"한계 돌파","12,12":"대치유","13,13":"불멸","14,14":"성결","15,15":"철벽 수호","16,16":"절대 정지","17,17":"결박","18,18":"탐식","19,19":"혈맹","20,20":"정신 지배","21,21":"천리안","22,22":"연금술","23,23":"차원 도약","24,24":"종말","25,25":"군단 소환","26,26":"대결계","27,27":"요새","28,28":"악몽","0,0,0":"멸화","1,1,1":"폭포","2,2,2":"대폭풍","3,3,3":"산맥","4,4,4":"뇌신의 심판","5,5,5":"세계수","6,6,6":"야수화","7,7,7":"현현","8,8,8":"과부하","9,9,9":"영웅의 서약","10,10,10":"거대화","11,11,11":"무한한 가능성","12,12,12":"기적","13,13,13":"윤회","14,14,14":"성광","15,15,15":"불괴","16,16,16":"시간 정지","17,17,17":"영겁의 사슬","18,18,18":"심연의 아가리","19,19,19":"영혼 계약","20,20,20":"자아 붕괴","21,21,21":"신탁","22,22,22":"만물 변환","23,23,23":"차원문","24,24,24":"멸망","25,25,25":"강림","26,26,26":"절대 영역","27,27,27":"난공불락","28,28,28":"몽환경","0,0,8":"폭발","1,12,26":"치유의 샘","3,15,27":"바위 방벽","4,17,24":"속박의 번개 폭풍","5,10,26":"숲 지대","2,20,28":"속삭이는 환영","0,1":"증기 폭발","0,2":"열풍","0,3":"용암","0,4":"벼락불","0,5":"들불","1,2":"폭우","1,3":"늪","1,4":"감전","1,5":"생명의 비","2,3":"모래폭풍","2,4":"뇌운","2,5":"꽃보라","3,4":"대지 방전","3,5":"숲","4,5":"번개 덩굴","0,6":"화염 강타","0,7":"각성의 불꽃","0,8":"업화","0,9":"불의 서약","0,10":"번지는 불길","0,11":"잠든 불씨","0,12":"따스한 불꽃","0,13":"불사조","0,14":"성화","0,15":"화염 수호","0,16":"꺼지지 않는 불","0,17":"화염 사슬","0,18":"열 흡수","0,19":"화염 계약","0,20":"분노의 불꽃","0,21":"불꽃 점술","0,22":"용해","0,23":"화염 질주","1,6":"해일","1,7":"샘솟는 물","1,8":"대홍수","1,9":"성수 서약","1,10":"밀물","1,11":"깊은 샘","1,12":"생명수","1,13":"생명의 샘","1,14":"성수","1,15":"물의 장막","1,16":"빙결","1,17":"물의 감옥","1,18":"소용돌이","1,19":"인어의 계약","1,20":"고요한 수면","1,21":"물거울","1,22":"안개","1,23":"물길","2,6":"강풍","2,7":"바람의 노래","2,8":"태풍","2,9":"바람의 맹세","2,10":"순풍","2,11":"잠든 바람","2,12":"치유의 산들바람","2,13":"생명의 숨결","2,14":"맑은 바람","2,15":"바람 장벽","2,16":"무풍","2,17":"회오리 감옥","2,18":"진공","2,19":"실프의 계약","2,20":"바람의 속삭임","2,21":"풍향 점술","2,22":"깃털화","2,23":"질풍","3,6":"대지 강타","3,7":"대지 각성","3,8":"지각 융기","3,9":"바위의 맹세","3,10":"돌기둥","3,11":"광맥","3,12":"대지의 품","3,13":"흙의 소생","3,14":"정화의 모래","3,15":"암석 갑옷","3,16":"석화","3,17":"대지의 감옥","3,18":"모래늪","3,19":"대지의 계약","3,20":"부동심","3,21":"지맥 감지","3,22":"금속화","3,23":"땅굴","4,6":"뇌격","4,7":"번개 각성","4,8":"낙뢰","4,9":"뇌신의 맹세","4,10":"번개 가지","4,11":"축전","4,12":"심장 박동","4,13":"뇌성 소생","4,14":"정화의 섬광","4,15":"뇌전 방패","4,16":"마비","4,17":"전류 사슬","4,18":"피뢰","4,19":"천둥 계약","4,20":"번뜩임","4,21":"섬광 예지","4,22":"플라즈마","4,23":"번개 도약","5,6":"거목 강타","5,7":"숲의 각성","5,8":"대삼림","5,9":"드루이드의 맹세","5,10":"만개","5,11":"씨앗","5,12":"숲의 치유","5,13":"재생의 새싹","5,14":"정화의 꽃","5,15":"수피 갑옷","5,16":"나이테 봉인","5,17":"덩굴 속박","5,18":"흡혈 덩굴","5,19":"엘프의 계약","5,20":"몽환의 꽃향기","5,21":"숲의 신탁","5,22":"목인화","5,23":"뿌리 이동","0,24":"대화재","0,25":"불의 정령","0,26":"화염 지대","0,27":"화염 방벽","0,28":"아지랑이","1,24":"쓰나미","1,25":"물의 정령","1,26":"수몰 지대","1,27":"수막","1,28":"신기루","2,24":"폭풍","2,25":"바람의 정령","2,26":"폭풍의 눈","2,27":"기류 방벽","2,28":"바람 그림자","3,24":"지진","3,25":"골렘","3,26":"대지 결계","3,27":"암벽","3,28":"모래 분신","4,24":"뇌우","4,25":"뇌수","4,26":"방전 지대","4,27":"뇌전 장벽","4,28":"섬광 분신","5,24":"숲의 분노","5,25":"트렌트","5,26":"원시림","5,27":"가시 방벽","5,28":"숲의 환각","6,7":"광전사","6,8":"괴력","6,9":"투지","6,10":"거인화","6,11":"야성 해방","6,12":"재생력","6,13":"불굴","6,14":"성스러운 일격","6,15":"철벽","6,16":"부동의 힘","6,17":"제압","6,18":"포식","6,19":"피의 계약","6,20":"기합","6,21":"전투 감각","6,22":"야수 변신","6,23":"돌진","7,8":"폭주","7,9":"영웅의 각성","7,10":"진화","7,11":"잠재력 해방","7,12":"기상","7,13":"환생","7,14":"깨달음","7,15":"경계","7,16":"찰나","7,17":"해방","7,18":"마력 각성","7,19":"영혼 공명","7,20":"명경지수","7,21":"예지몽","7,22":"탈피","7,23":"신속","8,9":"결의","8,10":"비대화","8,11":"잠재 폭발","8,12":"대회복","8,13":"완전 부활","8,14":"대정화","8,15":"강화 결계","8,16":"영구 동결","8,17":"강철 사슬","8,18":"흡수 폭주","8,19":"대가 증폭","8,20":"정신 폭발","8,21":"만리안","8,22":"대변환","8,23":"초가속","9,10":"수련","9,11":"운명의 서약","9,12":"성기사의 손길","9,13":"맹세의 귀환","9,14":"성전","9,15":"수호 기사","9,16":"불변의 맹세","9,17":"기아스","9,18":"피의 서약","9,19":"언약","9,20":"신념","9,21":"숙명","9,22":"변절","9,23":"원정","10,11":"개화","10,12":"재생","10,13":"회춘","10,14":"정화의 싹","10,15":"성채","10,16":"불로","10,17":"휘감기","10,18":"양분 흡수","10,19":"공생","10,20":"성숙","10,21":"시간 가속","10,22":"변태","10,23":"확산","11,12":"자가 치유","11,13":"잠든 생명","11,14":"본성 해방","11,15":"숨은 방패","11,16":"동면","11,17":"잠재력 봉인","11,18":"재능 탈취","11,19":"재능 계약","11,20":"영감","11,21":"운명 개척","11,22":"변이","11,23":"도약","12,13":"소생","12,14":"해독","12,15":"축복","12,16":"지혈","12,17":"치유 봉쇄","12,18":"생명 흡수","12,19":"생명 계약","12,20":"마음 치유","12,21":"예방","12,22":"저주 반전","12,23":"치유 전이","13,14":"성스러운 귀환","13,15":"불사의 가호","13,16":"가사 상태","13,17":"망령 속박","13,18":"영혼 흡수","13,19":"사령 계약","13,20":"혼 불러오기","13,21":"전생 기억","13,22":"언데드화","13,23":"영혼 이동","14,15":"성역","14,16":"정화 봉인","14,17":"퇴마","14,18":"저주 흡수","14,19":"신성 계약","14,20":"평정","14,21":"계시","14,22":"축성","14,23":"정화의 행진","15,16":"절대 방어","15,17":"수호의 사슬","15,18":"피해 흡수","15,19":"수호 계약","15,20":"정신 방벽","15,21":"위험 감지","15,22":"반사","15,23":"호위","16,17":"봉인","16,18":"시간 흡수","16,19":"시간 계약","16,20":"무념","16,21":"운명 고정","16,22":"결정화","16,23":"시간 왜곡","17,18":"흡혈 사슬","17,19":"노예 계약","17,20":"세뇌","17,21":"운명의 굴레","17,22":"저주","17,23":"끌어당김","18,19":"등가 교환","18,20":"기억 흡수","18,21":"지식 흡수","18,22":"마력 전환","18,23":"흡인","19,20":"정신 연결","19,21":"운명 계약","19,22":"거래","19,23":"귀환 계약","20,21":"투시","20,22":"매혹","20,23":"정신 투사","21,22":"운명 변경","21,23":"선견 회피","22,23":"위치 교환","6,24":"파괴","6,25":"야수 소환","6,26":"투기장","6,27":"강철 방패","6,28":"위압","7,24":"폭주 재앙","7,25":"영웅 소환","7,26":"각성의 영역","7,27":"반응 방어","7,28":"자각몽","8,24":"대재앙","8,25":"거대 소환","8,26":"증폭 결계","8,27":"강화 방벽","8,28":"환영 증식","9,24":"심판","9,25":"기사 소환","9,26":"서약의 영역","9,27":"맹세의 방패","9,28":"영웅의 잔상","10,24":"역병","10,25":"성장하는 소환수","10,26":"성장의 정원","10,27":"자라는 성벽","10,28":"커지는 그림자","11,24":"시한폭탄","11,25":"알 소환","11,26":"가능성의 영역","11,27":"잠재 방벽","11,28":"평행 분신","12,24":"치유 폭주","12,25":"치유 정령","12,26":"치유의 영역","12,27":"치유 방벽","12,28":"치유의 환상","13,24":"망자의 재앙","13,25":"망령 소환","13,26":"묘지","13,27":"망자의 방벽","13,28":"유령","14,24":"천벌","14,25":"천사 소환","14,26":"신성 지대","14,27":"신성 방벽","14,28":"빛의 환영","15,24":"반격","15,25":"수호령","15,26":"수호 결계","15,27":"금강벽","15,28":"수호 환영","16,24":"빙하기","16,25":"시간 정령","16,26":"정지 결계","16,27":"시간 방벽","16,28":"잔상","17,24":"사슬 폭풍","17,25":"구속 마수","17,26":"감옥","17,27":"사슬 방벽","17,28":"환영 감옥","18,24":"공허","18,25":"흡혈귀 소환","18,26":"흡수 영역","18,27":"흡수 방벽","18,28":"흡수의 환영","19,24":"계약의 대가","19,25":"계약 소환","19,26":"계약의 영역","19,27":"계약 방벽","19,28":"거짓 계약","20,24":"정신 붕괴","20,25":"영체 소환","20,26":"정신 영역","20,27":"정신 장벽","20,28":"환각","21,24":"예언된 재앙","21,25":"예언자 소환","21,26":"운명의 장","21,27":"예지 방어","21,28":"미래 환영","22,24":"변이 재앙","22,25":"키메라","22,26":"왜곡 영역","22,27":"반사 방벽","22,28":"변신","23,24":"유성 낙하","23,25":"차원 소환","23,26":"공간 도약진","23,27":"회피 방벽","23,28":"그림자 걸음","24,25":"마왕 강림","24,26":"멸망의 땅","24,27":"반격의 벽","24,28":"공포","25,26":"소환진","25,27":"수호수","25,28":"환영 분신","26,27":"결계진","26,28":"환상 세계","27,28":"허상 방벽"};
+const MOD=[['타오르는','화염의','불꽃'],['흐르는','물의','물결'],['휘몰아치는','바람의','돌풍'],['단단한','대지의','바위'],['번뜩이는','번개의','뇌광'],['푸르른','숲의','덩굴'],['사나운','야수의','맹수'],['깨어난','각성의','눈'],['거대한','증폭의','극점'],['고결한','맹세의','검'],['자라나는','성장의','새싹'],['잠든','잠재의','씨앗'],['따스한','치유의','손길'],['되살아난','부활의','불사조'],['성스러운','정화의','빛'],['굳건한','수호의','방패'],['멈춰진','정지의','얼음'],['얽매인','속박의','사슬'],['굶주린','흡수의','심연'],['맺어진','계약의','인장'],['고요한','정신의','의지'],['예견된','예언의','별'],['뒤틀린','변환의','거울'],['질주하는','이동의','문'],['끔찍한','재앙의','멸망'],['불려온','소환의','정령'],['드넓은','영역의','지대'],['견고한','방어의','성벽'],['아른거리는','환영의','그림자']];
+function nameOf(ix){
+  if(!ix.length)return '쉬기';
+  const s=ix.slice().sort((a,b)=>a-b),k=s.join(',');
+  if(NAMES[k])return NAMES[k];
+  let n=NAMES[s[0]+','+s[1]];const ex=s.slice(2);
+  if(ex[1]!=null)n=MOD[ex[1]][1]+' '+n;
+  n=MOD[ex[0]][0]+' '+n;
+  if(ex[2]!=null)n+='의 '+MOD[ex[2]][2];
+  return n;
+}
+
+/* ───── 규칙 엔진 (규칙서 최종본) ───── */
+const HPMAX=100,DIV=2,HEALDIV=1.75,REVIVE_HP=20,PURE_HEAL=5,SPIRIT_DIV=12,ROUNDS=10,HAND=7,ROUND_MS=60000;
+const BEATS={물:'불',불:'나무',나무:'땅',땅:'바람',바람:'번개',번개:'물'};
+const OPP=[['치유','재앙'],['수호','재앙'],['정지','이동'],['성장','정지'],['각성','속박'],['원초적 힘','정신'],['치유','흡수'],['맹세','변환']];
+const RK={원소:0,효과:1,형태:2};
+const R=x=>Math.round(x);
+const kw=c=>c.map(i=>D[i][2]);
+const has=(c,k)=>c.includes(KI[k]);
+const els=c=>c.filter(i=>i<6).map(i=>D[i][2]);
+const catN=(c,t)=>c.filter(i=>D[i][3]===t).length;
+const booms=c=>{const k=kw(c);return OPP.filter(p=>k.includes(p[0])&&k.includes(p[1]))};
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+const BAG=[...[0,1,2,3,4,5].flatMap(i=>[i,i,i]),...Array.from({length:23},(_,k)=>k+6)];
+function newPlayer(){return {hp:HPMAX,bag:shuffle(BAG),hand:[],disc:[],limit:5,lastGuard:false,lastBind:false,stops:0,reviveUsed:false,reviveReady:false,bonus:1,spirit:null,foresight:false}}
+function draw(p){while(p.hand.length<HAND){if(!p.bag.length){p.bag=shuffle(p.disc);p.disc=[]}if(!p.bag.length)break;p.hand.push(p.bag.pop())}p.hand.sort((a,b)=>a-b)}
+function newGame(){const S={round:1,field:null,last:null,over:null,P:{h:newPlayer(),g:newPlayer()}};draw(S.P.h);draw(S.P.g);return S}
+function comboError(c,p){
+  if(!c.length)return null;
+  if(c.length>p.limit)return p.limit===1?'속박에 걸려서 이번 라운드는 룬 1개만 쓸 수 있어요':'룬은 5개까지 넣을 수 있어요';
+  const cnt={};p.hand.forEach(i=>cnt[i]=(cnt[i]||0)+1);
+  for(const i of c){if(!cnt[i])return '손패에 없는 룬이에요';cnt[i]--}
+  for(let k=1;k<c.length;k++){const a=D[c[k-1]],b=D[c[k]];if(RK[b[3]]<RK[a[3]])return `${a[2]}(${a[3]}) 뒤에 ${b[2]}(${b[3]})가 왔어요. 원소 → 효과 → 형태 순서로 놓아 주세요`}
+  if(catN(c,'원소')>3)return '원소 룬은 3개까지 넣을 수 있어요';
+  if(catN(c,'효과')>2)return '효과 룬은 2개까지 넣을 수 있어요';
+  if(catN(c,'형태')>1)return '형태 룬은 1개까지 넣을 수 있어요';
+  if(has(c,'원초적 힘')&&!catN(c,'원소'))return '원초적 힘은 원소와 함께 써야 해요';
+  if(has(c,'원초적 힘')&&catN(c,'효과')>1)return '원초적 힘은 다른 효과와 함께 쓸 수 없어요';
+  if(has(c,'수호')&&p.lastGuard)return '수호는 연속 2라운드 쓸 수 없어요';
+  if(has(c,'정지')&&p.stops>=1)return '정지는 한 판에 1번만 쓸 수 있어요';
+  if(has(c,'속박')&&p.lastBind)return '속박은 연속으로 쓸 수 없어요';
+  if(has(c,'부활')&&p.reviveReady)return '부활이 이미 대기 중이에요';
+  if(has(c,'부활')&&p.reviveUsed)return '부활은 한 판에 1번만 쓸 수 있어요';
+  return null;
+}
+function power(c,bonus){
+  const e=els(c);let p=e.length?10*e.length:5;
+  for(const k of kw(c)){
+    if(k==='원초적 힘')p*=2.5;else if(k==='증폭')p*=1.5;
+    else if(k==='각성')p*=(e.includes('불')||e.includes('물'))?2:1.2;
+    else if(k==='성장')p*=(e.includes('땅')||e.includes('나무'))?2:1.2;
+    else if(k==='잠재력')p*=(e.includes('바람')||e.includes('번개'))?2:1.2;
+  }
+  return p*(bonus||1);
+}
+function attacks(c){if(!els(c).length)return false;if(has(c,'치유')||has(c,'수호')||has(c,'방어'))return false;if(has(c,'부활')&&!els(c).includes('불'))return false;return true}
+function actionOf(c){if(!c.length)return '쉬기';if(attacks(c))return '공격';if(has(c,'치유')||has(c,'수호')||has(c,'방어')||has(c,'부활'))return '지원';return '효과'}
+function elemMult(a,d){
+  const ae=[...new Set(els(a))],de=new Set(els(d)),notes=[];
+  const win=ae.find(x=>de.has(BEATS[x])),lose=[...de].find(y=>ae.includes(BEATS[y]));
+  let m=1;
+  if(win&&!lose){m=1.5;notes.push(`상성 유리 ${win}→${BEATS[win]} ×1.5`)}
+  else if(lose&&!win){m=0.75;notes.push(`상성 불리 ${lose}→${BEATS[lose]} ×0.75`)}
+  if(ae.includes('바람')&&ae.includes('불')){m*=1.2;notes.push('바람이 불을 키워요 ×1.2')}
+  return {m,notes};
+}
+function transform(target,by){const e=els(by);return target.map(i=>i>=6?i:(e.length?KI[BEATS[e[0]]]:KI[BEATS[D[i][2]]]))}
+/* 한 라운드 계산. 이벤트 문장의 @h/@g는 보는 사람에 따라 '나'/'상대'로 바뀌어요 */
+function resolve(S0,sub){
+  const S=JSON.parse(JSON.stringify(S0)),P=S.P,O={h:'g',g:'h'},E=[],SEATS=['h','g'];
+  const C0={h:sub.h||[],g:sub.g||[]},hp0={h:P.h.hp,g:P.g.hp};
+  const pure={h:has(C0.h,'정화'),g:has(C0.g,'정화')},blocked=s=>pure[O[s]];
+  for(const s of SEATS)if(pure[s]){const n=Math.min(PURE_HEAL,HPMAX-P[s].hp);P[s].hp+=n;E.push(`@${s}의 정화: 체력 ${n} 회복`)}
+  const C={h:C0.h.slice(),g:C0.g.slice()};
+  for(const s of SEATS)if(has(C0[s],'변환')&&C0[O[s]].length){
+    if(blocked(s))E.push(`@${O[s]}의 정화가 @${s}의 변환을 막았어요`);
+    else{const t=transform(C0[O[s]],C0[s]);if(t.join()!==C0[O[s]].join()){C[O[s]]=t;E.push(`@${s}의 변환: @${O[s]}의 원소가 ${[...new Set(els(t))].join('·')}(으)로 바뀌었어요`)}}
+  }
+  let stopped=false;
+  for(const s of SEATS)if(has(C[s],'정지')){P[s].stops++;if(blocked(s))E.push(`@${O[s]}의 정화가 @${s}의 정지를 막았어요`);else stopped=true}
+  const pw={h:power(C.h,P.h.bonus),g:power(C.g,P.g.bonus)};
+  const dealt={h:0,g:0},heal={h:0,g:0},selfd={h:0,g:0},refl={h:0,g:0},oath={h:false,g:false};
+  if(stopped){
+    E.push('정지! 이번 라운드 양쪽 행동이 모두 취소됐어요');
+    for(const s of SEATS)if(attacks(C[s])&&has(C[s],'맹세'))oath[s]=true;
+  }else{
+    for(const s of SEATS)if(booms(C[s]).length){
+      if(pure[s])E.push(`@${s}의 정화가 폭주 자기 피해를 막았어요`);
+      else{selfd[s]=R(pw[s]/4);E.push(`@${s} 폭주(${booms(C[s]).map(p=>p.join('↔')).join(', ')}): 자기 피해 ${selfd[s]}`)}
+    }
+    for(const s of SEATS){
+      const c=C[s],d=C[O[s]];if(!attacks(c))continue;
+      const em=elemMult(c,d);let dm=pw[s]/DIV*em.m;const notes=em.notes.slice();
+      if(S.field&&els(c).includes(S.field.el)){dm*=1.3;notes.push(`영역(${S.field.el}) ×1.3`)}
+      if(has(c,'부활')){dm*=0.5;notes.push('부활 공격 ×0.5')}
+      const hits=has(c,'환영')?2:1;let guard=has(d,'수호')?(has(d,'환영')?2:1):0;
+      let shield=has(d,'방어')?R(pw[O[s]]/2):0,stolen=0,reduced=false,total=0;
+      if(has(c,'흡수')&&shield>0){stolen=R(shield/2);shield-=stolen;notes.push(`흡수로 방어막 ${stolen} 빼앗음`)}
+      for(let k=0;k<hits;k++){
+        let x=dm*(k===0?1:0.5);
+        if(has(c,'재앙')){if(guard||shield||has(d,'이동'))notes.push('재앙이 막기를 무시')}
+        else{
+          if(guard>0){guard--;x=0;reduced=true;notes.push('수호가 막음')}
+          else{
+            if(has(d,'이동')){x/=2;reduced=true;notes.push('이동으로 절반')}
+            const b=Math.min(shield,x);if(b>0){shield-=b;x-=b;reduced=true;notes.push(`방어로 ${R(b)} 막음`)}
+          }
+        }
+        total+=x;
+      }
+      dealt[s]=R(total);
+      E.push(`@${s}의 공격${hits>1?'(환영 2번)':''} → @${O[s]}에게 ${dealt[s]} 피해`+(notes.length?` (${[...new Set(notes)].join(', ')})`:''));
+      if(has(c,'맹세')&&reduced)oath[s]=true;
+      if(has(c,'흡수'))heal[s]+=stolen||R(dealt[s]/2);
+    }
+    for(const s of SEATS)if(has(C[s],'정신')){
+      if(blocked(s))E.push(`@${O[s]}의 정화가 @${s}의 정신 연결을 막았어요`);
+      else if(dealt[O[s]]>0){refl[O[s]]+=dealt[O[s]];E.push(`@${s}의 정신 연결: @${O[s]}도 ${dealt[O[s]]} 피해`)}
+    }
+    for(const s of SEATS)if(has(C[s],'치유'))heal[s]+=R(pw[s]/HEALDIV*(els(C[s]).includes('나무')?1.5:1));
+    for(const s of SEATS){
+      P[s].hp-=dealt[O[s]]+selfd[s]+refl[s];
+      if(heal[s]){const n=Math.min(heal[s],HPMAX-P[s].hp);P[s].hp+=Math.max(0,n);E.push(`@${s} 체력 ${Math.max(0,n)} 회복`)}
+    }
+  }
+  const nextLimit={h:5,g:5};
+  for(const s of SEATS){
+    const p=P[s],c=C[s];p.bonus=1;
+    if(has(c,'계약')){p.hp-=10;p.bonus*=2;E.push(`@${s}의 계약: 체력 10을 내고 다음 라운드 위력 ×2`)}
+    if(oath[s]){p.bonus*=2;E.push(`@${s}의 맹세: 다음 라운드 위력 ×2`)}
+    if(has(c,'속박')){if(blocked(s))E.push(`@${O[s]}의 정화가 @${s}의 속박을 막았어요`);else{nextLimit[O[s]]=1;E.push(`@${s}의 속박: 다음 라운드 @${O[s]}는 룬 1개만`)}}
+    p.lastGuard=has(c,'수호');p.lastBind=has(c,'속박');
+    if(has(c,'부활')){p.reviveReady=true;E.push(`@${s}의 부활이 대기 중이에요`)}
+    p.foresight=has(c,'예언');
+    if(!stopped&&has(c,'소환')&&els(c).length){const anc=has(c,'원초적 힘');p.spirit={dmg:R(pw[s]/SPIRIT_DIV)*(anc?2:1),turns:anc?4:3,anc};E.push(`@${s}의 ${anc?'고대 정령':'정령'} 소환: ${p.spirit.turns}라운드 동안 ${p.spirit.dmg} 피해`)}
+    if(!stopped&&has(c,'영역')&&els(c).length){S.field={el:els(c)[0],turns:3,by:s};E.push(`@${s}의 영역: 3라운드 동안 ${S.field.el} 공격 ×1.3`)}
+  }
+  P.h.limit=nextLimit.h;P.g.limit=nextLimit.g;
+  for(const s of SEATS){const p=P[s];if(p.spirit){P[O[s]].hp-=p.spirit.dmg;E.push(`@${s}의 정령 → @${O[s]}에게 ${p.spirit.dmg} 피해`);p.spirit.turns--;if(p.spirit.turns<=0)p.spirit=null}}
+  if(S.field){S.field.turns--;if(S.field.turns<=0){S.field=null;E.push('영역이 사라졌어요')}}
+  for(const s of SEATS){const p=P[s];if(p.hp<=0&&p.reviveReady){p.hp=REVIVE_HP;p.reviveReady=false;p.reviveUsed=true;E.push(`@${s} 부활! 체력 ${REVIVE_HP}`)}}
+  for(const s of SEATS){const p=P[s];for(const i of C0[s]){const j=p.hand.indexOf(i);if(j>=0)p.disc.push(p.hand.splice(j,1)[0])}}
+  S.last={round:S.round,play:C0,shown:C,pw,hp0,hp1:{h:P.h.hp,g:P.g.hp},events:E};
+  const hd=P.h.hp<=0,gd=P.g.hp<=0;
+  if(hd||gd)S.over={winner:hd&&gd?(P.h.hp>P.g.hp?'h':P.g.hp>P.h.hp?'g':'draw'):(hd?'g':'h'),reason:hd&&gd?'double':'ko'};
+  else if(S.round>=ROUNDS)S.over={winner:P.h.hp>P.g.hp?'h':P.g.hp>P.h.hp?'g':'draw',reason:'time'};
+  else{S.round++;draw(P.h);draw(P.g)}
+  return S;
+}
+
+/* ───── 컴퓨터 상대 ───── */
+function aiValue(c,me,op,field,known){
+  const p=power(c,me.bonus),k=kw(c);let v=0,opd=12;
+  if(known&&!attacks(known))opd=2;
+  if(attacks(c)){
+    let m=known?elemMult(c,known).m:1;if(field&&els(c).includes(field.el))m*=1.3;
+    let d=p/DIV*m*(k.includes('환영')?1.5:1)*(k.includes('부활')?0.5:1);
+    if(known&&(has(known,'수호')||has(known,'정지'))&&!k.includes('재앙'))d*=has(known,'정지')?0.1:0.4;
+    v+=d+(k.includes('재앙')?3:0)+(k.includes('흡수')?d/2:0)+(k.includes('맹세')?3:0);
+    if(d>=op.hp)v+=30;
+  }
+  if(k.includes('치유'))v+=Math.min(HPMAX-me.hp,p/HEALDIV*(els(c).includes('나무')?1.5:1))*(me.hp<50?1.4:0.5);
+  if(k.includes('수호'))v+=opd*(k.includes('환영')?2:1)*0.75;
+  if(k.includes('방어'))v+=Math.min(p/2,opd)*0.75;
+  if(k.includes('이동'))v+=opd*0.4;
+  if(k.includes('부활'))v+=me.hp<40?25:6;
+  if(k.includes('정지'))v+=opd*0.6-(attacks(c)?p/DIV:0)+(me.hp<op.hp?5:0);
+  if(k.includes('속박'))v+=8;
+  if(k.includes('계약'))v+=me.hp>30?7:-10;
+  if(k.includes('정신'))v+=opd*0.6*(me.hp>op.hp?1:0.3);
+  if(k.includes('예언'))v+=3;
+  if(k.includes('변환'))v+=5;
+  if(k.includes('정화'))v+=Math.min(PURE_HEAL,HPMAX-me.hp)+3+(booms(c).length?4:0);
+  if(k.includes('소환')&&els(c).length)v+=R(p/SPIRIT_DIV)*(k.includes('원초적 힘')?8:3)*0.8;
+  if(k.includes('영역')&&els(c).length)v+=p/DIV*0.3*2;
+  if(booms(c).length&&!k.includes('정화'))v-=p/4;
+  return v-c.length*0.5+Math.random()*4;
+}
+function aiChoose(me,op,field,known){
+  let best=[],bv=-1e9;const h=me.hand;
+  const rec=(start,cur)=>{
+    if(cur.length){const c=cur.map(j=>h[j]);if(!comboError(c,me)){const v=aiValue(c,me,op,field,known);if(v>bv){bv=v;best=c}}}
+    if(cur.length>=me.limit)return;
+    for(let j=start;j<h.length;j++){if(j>start&&h[j]===h[j-1])continue;rec(j+1,[...cur,j])}
+  };
+  rec(0,[]);
+  return best;
+}
+
+/* ───── 각인 인식 (사전과 같은 방식) ───── */
+/* 그린 룬 알아보기: 견본과 점구름 비교($P) 후 격자 그림 겹침으로 한 번 더 다듬어요 */
+const recognizeRune=(()=>{
+/* 룬 획 견본: 높이 100 기준 좌표, 획마다 꺾이는 점 목록 (y는 아래로) */
+function ellipse(cx,cy,rx,ry,n){const p=[];for(let k=0;k<=n;k++){const a=k/n*Math.PI*2;p.push([cx+rx*Math.cos(a),cy+ry*Math.sin(a)])}return p}
+const STROKES={
+'ᚲ':[[[44,0],[0,50],[44,100]]],
+'ᛡ':[[[50,0],[50,100]],[[22,5],[78,66]],[[78,5],[22,66]]],
+'ᚫ':[[[0,0],[0,100]],[[0,0],[30,32]],[[0,27],[30,58]]],
+'ᛠ':[[[50,0],[50,100]],[[18,0],[34,18],[50,0],[66,18],[82,0]]],
+'ᚸ':[[[0,0],[62,100]],[[62,0],[0,100]],ellipse(31,50,20,10,14)],
+'ᚪ':[[[0,0],[0,100]],[[0,0],[14,11],[24,1]],[[0,20],[14,31]]],
+'ᚢ':[[[0,100],[0,0],[14,10],[26,24],[34,43],[37,63],[37,100]]],
+'ᛞ':[[[0,0],[0,100]],[[60,0],[60,100]],[[0,0],[60,100]],[[60,0],[0,100]]],
+'ᚠ':[[[0,0],[0,100]],[[0,20],[18,2]],[[0,47],[27,16]]],
+'ᛏ':[[[50,0],[50,100]],[[30,20],[50,0],[70,20]]],
+'ᛒ':[[[0,0],[0,100]],[[0,0],[28,26],[0,51],[28,76],[0,100]]],
+'ᛜ':[[[50,0],[100,50],[50,100],[0,50],[50,0]]],
+'ᚹ':[[[0,0],[0,100]],[[0,0],[28,30],[0,58]]],
+'ᛇ':[[[50,0],[50,100]],[[50,0],[70,25]],[[50,100],[30,75]]],
+'ᛊ':[[[22,0],[0,28],[42,74],[21,100]]],
+'ᛉ':[[[50,0],[50,100]],[[50,32],[18,0]],[[50,32],[82,0]]],
+'ᛁ':[[[0,0],[0,100]]],
+'ᚾ':[[[50,0],[50,100]],[[35,34],[65,69]]],
+'ᛃ':[[[28,0],[0,34],[28,69]],[[30,28],[58,66],[30,100]]],
+'ᚷ':[[[0,0],[60,100]],[[60,0],[0,100]]],
+'ᛗ':[[[0,0],[0,100]],[[39,0],[39,100]],[[0,0],[39,46]],[[39,0],[0,46]]],
+'ᚨ':[[[0,0],[0,100]],[[0,0],[20,23]],[[0,25],[20,47]]],
+'ᛈ':[[[0,0],[0,100]],[[0,0],[16,18],[32,0]],[[0,100],[16,82],[32,100]]],
+'ᚱ':[[[0,0],[0,100]],[[0,0],[28,35],[10,58],[27,100]]],
+'ᚺ':[[[0,0],[0,100]],[[28,0],[28,100]],[[0,34],[28,71]]],
+'ᛖ':[[[0,100],[0,0],[20,25],[40,0],[40,100]]],
+'ᛟ':[[[29,0],[60,34],[0,100]],[[29,0],[0,34],[62,100]]],
+'ᚦ':[[[0,0],[0,100]],[[0,19],[26,51],[0,84]]],
+'ᛚ':[[[0,0],[0,100]],[[0,0],[20,27]]]
+};
+/* $P 점구름 인식기 (Vatavu·Anthony·Wobbrock 2012): 획 순서와 방향에 상관없이 모양만 비교 */
+const NP=48;
+const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+function pathLen(p){let d=0;for(let i=1;i<p.length;i++)if(p[i].id===p[i-1].id)d+=dist(p[i-1],p[i]);return d}
+function resample(pts,n){
+  const p=pts.map(q=>({...q})),I=pathLen(p)/(n-1);let D=0;const out=[{...p[0]}];
+  for(let i=1;i<p.length;i++){
+    if(p[i].id!==p[i-1].id)continue;
+    const d=dist(p[i-1],p[i]);
+    if(D+d>=I&&d>0){const t=(I-D)/d,q={x:p[i-1].x+t*(p[i].x-p[i-1].x),y:p[i-1].y+t*(p[i].y-p[i-1].y),id:p[i].id};out.push(q);p.splice(i,0,q);D=0}
+    else D+=d;
+  }
+  while(out.length<n)out.push({...p[p.length-1]});
+  return out.slice(0,n);
+}
+function normalize(pts){
+  let p=resample(pts,NP);
+  let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+  p.forEach(q=>{x0=Math.min(x0,q.x);y0=Math.min(y0,q.y);x1=Math.max(x1,q.x);y1=Math.max(y1,q.y)});
+  const s=Math.max(x1-x0,y1-y0)||1;
+  p=p.map(q=>({x:(q.x-x0)/s,y:(q.y-y0)/s,id:q.id}));
+  const cx=p.reduce((a,q)=>a+q.x,0)/p.length,cy=p.reduce((a,q)=>a+q.y,0)/p.length;
+  return p.map(q=>({x:q.x-cx,y:q.y-cy,id:q.id}));
+}
+function cloudDist(a,b,start){
+  const n=a.length,used=new Array(n).fill(false);let sum=0,i=start;
+  do{let m=Infinity,k=-1;for(let j=0;j<n;j++)if(!used[j]){const d=dist(a[i],b[j]);if(d<m){m=d;k=j}}used[k]=true;sum+=(1-((i-start+n)%n)/n)*m;i=(i+1)%n}while(i!==start);
+  return sum;
+}
+function match(a,b){const step=Math.floor(Math.pow(NP,0.5));let m=Infinity;for(let i=0;i<NP;i+=step)m=Math.min(m,cloudDist(a,b,i),cloudDist(b,a,i));return m}
+const strokesToPts=st=>st.flatMap((s,id)=>s.map(([x,y])=>({x,y,id})));
+const TEMPLATES=Object.entries(STROKES).map(([g,st])=>({g,pts:normalize(strokesToPts(st))}));
+/* strokes: [[[x,y],...],...] → 거리가 가까운 순서의 [{g, d}] */
+function recognize(strokes){
+  const raw=strokesToPts(strokes.filter(s=>s.length));
+  if(raw.length<2)return [];
+  const c=normalize(raw);
+  return TEMPLATES.map(t=>({g:t.g,d:match(c,t.pts)})).sort((a,b)=>a.d-b.d);
+}
+/* 2단계: 모양을 작은 격자 그림으로 그려 겹치는 정도를 비교 (짧은 가지까지 같은 무게로) */
+const GR=20;
+function raster(strokes){
+  const pts=strokes.flat();let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+  pts.forEach(([x,y])=>{x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y)});
+  const s=Math.max(x1-x0,y1-y0)||1,ox=(s-(x1-x0))/2,oy=(s-(y1-y0))/2,g=new Float32Array(GR*GR);
+  const put=(x,y)=>{const i=Math.min(GR-1,Math.max(0,Math.floor((x-x0+ox)/s*(GR-1)+.5))),j=Math.min(GR-1,Math.max(0,Math.floor((y-y0+oy)/s*(GR-1)+.5)));g[j*GR+i]=1};
+  strokes.forEach(st=>{for(let k=1;k<st.length;k++){const [a,b]=[st[k-1],st[k]],L=Math.hypot(b[0]-a[0],b[1]-a[1])/s*GR*2+1;for(let t=0;t<=L;t++)put(a[0]+(b[0]-a[0])*t/L,a[1]+(b[1]-a[1])*t/L)}if(st.length===1)put(st[0][0],st[0][1])});
+  let h=g;for(let r=0;r<2;r++){const o=new Float32Array(GR*GR);for(let j=0;j<GR;j++)for(let i=0;i<GR;i++){let v=0,c=0;for(let dj=-1;dj<=1;dj++)for(let di=-1;di<=1;di++){const a=i+di,b=j+dj;if(a>=0&&b>=0&&a<GR&&b<GR){v+=h[b*GR+a];c++}}o[j*GR+i]=v/c}h=o}
+  let n=0;h.forEach(v=>n+=v*v);n=Math.sqrt(n)||1;return h.map(v=>v/n);
+}
+const RAST=Object.fromEntries(Object.entries(STROKES).map(([g,st])=>[g,raster(st)]));
+function combined(strokes,alpha){
+  const r=recognize(strokes);if(!r.length)return r;const R=raster(strokes.filter(s=>s.length));
+  return r.map(x=>{let c=0;const T=RAST[x.g];for(let i=0;i<R.length;i++)c+=R[i]*T[i];return {g:x.g,d:x.d,c,s:x.d*(1+alpha*(1-c))}}).sort((a,b)=>a.s-b.s);
+}
+return strokes=>combined(strokes,1);
+})();
+const REJECT=2.2; /* 이보다 멀면 알아보기 어렵다고 안내 */
+
+
+/* ───── 화면 상태 ───── */
+const $=s=>document.querySelector(s);
+function el(t,c,x){const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+const A={mode:'lobby',kind:null,seat:'h',S:null,meta:null,sel:[],confirmed:false,subs:{h:null,g:null},aiPick:null,shownRound:0,resolving:false};
+const who=(s,me)=>s===me?'나':'상대';
+const fill=(t,me)=>t.replace(/@([hg])/g,(_,s)=>who(s,me));
+function show(v){['lobby','wait','play'].forEach(x=>$('#v-'+x).hidden=x!==v);A.mode=v}
+function curCombo(){const h=A.S.P[A.seat].hand;return A.sel.map(p=>h[p])}
+function hpBar(p){const w=Math.max(0,p.hp)/HPMAX*100,b=el('div','hp'),i=el('i',w<=25?'low':w<=50?'mid':'');i.style.width=w+'%';b.append(i);return b}
+function statusChips(p,isMe){
+  const box=el('div','chips'),add=(t,on)=>box.append(el('span','chip'+(on?' on':''),t));
+  if(p.reviveReady)add('부활 대기',1);
+  if(p.limit===1)add('속박: 이번 라운드 룬 1개',1);
+  if(p.bonus>1)add(`다음 공격 위력 ×${p.bonus}`,1);
+  if(p.spirit)add(`${p.spirit.anc?'고대 정령':'정령'} ${p.spirit.turns}라운드 · ${p.spirit.dmg} 피해`,1);
+  if(p.foresight)add('예언',1);
+  if(p.lastGuard)add('수호 쉬는 중');
+  if(p.lastBind)add('속박 쉬는 중');
+  if(p.stops)add('정지 사용함');
+  if(p.reviveUsed)add('부활 사용함');
+  return box;
+}
+function renderWho(box,p,label){box.replaceChildren();const h=el('div','who-h');h.append(el('b',null,label),el('span','hpnum',`체력 ${Math.max(0,p.hp)} / ${HPMAX}`));box.append(h,hpBar(p),statusChips(p))}
+function renderPlay(){
+  const S=A.S,me=A.seat,op=me==='h'?'g':'h',P=S.P;
+  $('#round-lab').textContent=`라운드 ${S.round} / ${ROUNDS}`;
+  renderWho($('#opp'),P[op],A.kind==='ai'?'컴퓨터':'상대');
+  renderWho($('#me'),P[me],'나');
+  const f=$('#field');f.hidden=!S.field;if(S.field)f.textContent=`영역: ${S.field.el} · ${S.field.turns}라운드 남음 · ${S.field.el} 공격 ×1.3`;
+  // 지난 라운드
+  const rv=$('#reveal');rv.hidden=!S.last;
+  if(S.last){
+    const L=S.last;rv.replaceChildren(el('h3',null,`라운드 ${L.round} 결과`));
+    for(const s of [op,me]){
+      const r=el('div','play-row'),c=L.play[s],sh=L.shown[s];
+      const right=el('div');
+      right.append(el('span','g',c.map(i=>D[i][0]).join('')||'—'),' ',el('span','nm',nameOf(c)));
+      const changed=sh.join()!==c.join();
+      right.append(el('div','meta',(c.length?`${actionOf(sh)} · 위력 ${R(L.pw[s])}`:'룬을 쓰지 않았어요')+(changed?` · 변환되어 ${sh.map(i=>D[i][2]).join('+')}`:'')+` · 체력 ${Math.max(0,L.hp0[s])} → ${Math.max(0,L.hp1[s])}`));
+      r.append(el('span','lab',who(s,me)),right);rv.append(r);
+    }
+    const ul=el('ul','evs');L.events.forEach(t=>ul.append(el('li',null,fill(t,me))));if(!L.events.length)ul.append(el('li',null,'아무 일도 일어나지 않았어요'));rv.append(ul);
+  }
+  renderCombo();renderHand();renderWait();
+}
+function renderCombo(){
+  const S=A.S,p=S.P[A.seat],c=curCombo(),box=$('#combo');box.replaceChildren();
+  box.append(el('div','combo-g',c.map(i=>D[i][0]).join('')));
+  if(!c.length){box.append(el('div','combo-m','손패에서 룬을 눌러 조합하세요. 원소 → 효과 → 형태 순서예요.'));}
+  else{
+    const err=comboError(c,p),pw=power(c,p.bonus),act=actionOf(c);
+    box.append(el('div','combo-n',nameOf(c)));
+    let m=`${act} · 위력 ${R(pw)}`;
+    if(act==='공격'){let d=pw/DIV;if(A.S.field&&els(c).includes(A.S.field.el))d*=1.3;if(has(c,'부활'))d*=0.5;m+=` · 예상 피해 ${R(d)}${has(c,'환영')?` + ${R(d/2)}`:''} (상성 전)`}
+    if(has(c,'치유'))m+=` · 회복 ${R(pw/HEALDIV*(els(c).includes('나무')?1.5:1))}`;
+    if(has(c,'방어'))m+=` · 막기 ${R(pw/2)}`;
+    if(booms(c).length)m+=` · 폭주! 자기 피해 ${R(pw/4)}`;
+    box.append(el('div','combo-m',m));
+    if(err)box.append(el('div','err',err));
+    const ul=el('ul','combo-e');[...new Set(c)].forEach(i=>ul.append(el('li',null,`${D[i][0]} ${D[i][2]}: ${EFX[D[i][2]]}`)));box.append(ul);
+  }
+  // 예언으로 본 상대 원소
+  const op=A.seat==='h'?'g':'h';
+  if(p.foresight){
+    let seen=null;
+    if(A.kind==='ai'&&A.aiPick)seen=A.aiPick;
+    if(A.kind==='net'&&A.subs[op]&&A.subs[op].round===S.round)seen=A.subs[op].combo;
+    box.append(el('div','combo-m',seen?`예언: 상대 조합의 원소는 ${els(seen).join('·')||'없음'}`:'예언: 상대가 확정하면 원소가 보여요'));
+  }
+  const err=comboError(c,p);
+  $('#b-confirm').disabled=A.confirmed||!c.length||!!err;
+  ['#b-undo','#b-clear'].forEach(s=>$(s).disabled=A.confirmed||!c.length);
+  $('#b-pass').disabled=A.confirmed;$('#b-pad').disabled=A.confirmed;
+}
+function renderHand(){
+  const p=A.S.P[A.seat],box=$('#hand');box.replaceChildren();
+  p.hand.forEach((i,pos)=>{
+    const b=el('button','card');b.type='button';b.dataset.g=D[i][4];
+    const k=A.sel.indexOf(pos);if(k>=0)b.classList.add('sel');
+    b.append(el('span','ord',k>=0?String(k+1):''),el('b',null,D[i][0]),el('span',null,D[i][2]));
+    b.disabled=A.confirmed;b.setAttribute('aria-pressed',String(k>=0));
+    b.onclick=()=>{if(A.confirmed)return;const j=A.sel.indexOf(pos);if(j>=0)A.sel.splice(j,1);else if(A.sel.length<5)A.sel.push(pos);renderCombo();renderHand()};
+    box.append(b);
+  });
+}
+function renderWait(){
+  const op=A.seat==='h'?'g':'h';let t='';
+  if(A.kind==='net'){
+    const oc=A.subs[op]&&A.subs[op].round===A.S.round;
+    t=A.confirmed?(oc?'둘 다 확정했어요. 결과를 계산하는 중이에요.':'확정했어요. 상대를 기다리는 중이에요.'):(oc?'상대는 확정했어요.':'');
+  }
+  $('#wait-msg').textContent=t;
+}
+/* ───── 각인 판 ───── */
+let pad={strokes:[],cur:null,timer:null,ctx:null,size:0};
+function setupPad(){
+  const c=$('#pad'),w=Math.min(300,($('#padpanel').clientWidth||320)-36-84);const size=Math.max(180,Math.round(w));
+  if(size!==pad.size){pad.size=size;const dpr=window.devicePixelRatio||1;c.width=size*dpr;c.height=size*dpr;c.style.width=c.style.height=size+'px';pad.ctx=c.getContext('2d');pad.ctx.setTransform(dpr,0,0,dpr,0,0)}
+  drawPad();
+}
+function drawPad(){
+  const x=pad.ctx;if(!x)return;const s=pad.size,cs=getComputedStyle(document.documentElement);x.clearRect(0,0,s,s);
+  if(!pad.strokes.length&&!pad.cur){x.fillStyle=cs.getPropertyValue('--mute').trim();x.font='14px "Gowun Batang", serif';x.textAlign='center';x.fillText('여기에 룬을 새겨요',s/2,s/2)}
+  x.strokeStyle=cs.getPropertyValue('--rune').trim();x.lineWidth=Math.max(4,s/45);x.lineCap='round';x.lineJoin='round';
+  [...pad.strokes,...(pad.cur?[pad.cur]:[])].forEach(st=>{x.beginPath();st.forEach(([a,b],k)=>k?x.lineTo(a,b):x.moveTo(a,b));if(st.length===1)x.lineTo(st[0][0]+.1,st[0][1]);x.stroke()});
+}
+function freeSlots(){const h=A.S.P[A.seat].hand;return h.map((i,pos)=>({i,pos})).filter(o=>!A.sel.includes(o.pos))}
+function readPad(){
+  clearTimeout(pad.timer);const st=pad.strokes.filter(s=>s.length>1);pad.strokes=[];pad.cur=null;drawPad();
+  if(!st.length||A.confirmed)return;
+  const free=freeSlots(),glyphs=new Set(free.map(o=>D[o.i][0]));
+  const r=recognizeRune(st).filter(x=>glyphs.has(x.g));
+  const res=$('#padres');res.replaceChildren();
+  const addG=g=>{const o=free.find(f=>D[f.i][0]===g);if(o&&A.sel.length<5){A.sel.push(o.pos);renderCombo();renderHand()}};
+  if(!r.length){res.textContent='손패에 그 룬이 없어요.';return}
+  const best=r[0];
+  if(best.s<=REJECT){addG(best.g);res.append(`${best.g} ${D[KI[D.find(d=>d[0]===best.g)[2]]][2]} 넣었어요. `)}
+  else res.append('알아보기 어려워요. ');
+  const alts=(best.s<=REJECT?r.slice(1,4):r.slice(0,3));
+  if(alts.length){res.append(best.s<=REJECT?'다른 룬이면: ':'혹시: ');alts.forEach(a=>{const b=el('button','alt');b.type='button';b.append(el('b',null,a.g),D.find(d=>d[0]===a.g)[2]);b.onclick=()=>{if(best.s<=REJECT)A.sel.pop();addG(a.g);res.textContent=`${a.g} ${D.find(d=>d[0]===a.g)[2]}(으)로 바꿨어요.`};res.append(b,' ')})}
+}
+{
+  const c=$('#pad'),pt=e=>{const r=c.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top]};
+  c.addEventListener('pointerdown',e=>{e.preventDefault();clearTimeout(pad.timer);try{c.setPointerCapture(e.pointerId)}catch(_){}pad.cur=[pt(e)];drawPad()});
+  c.addEventListener('pointermove',e=>{if(!pad.cur)return;const p=pt(e),l=pad.cur[pad.cur.length-1];if(Math.hypot(p[0]-l[0],p[1]-l[1])>=2){pad.cur.push(p);drawPad()}});
+  const end=()=>{if(!pad.cur)return;pad.strokes.push(pad.cur);pad.cur=null;drawPad();clearTimeout(pad.timer);pad.timer=setTimeout(readPad,900)};
+  c.addEventListener('pointerup',end);c.addEventListener('pointercancel',end);
+  $('#pad-go').onclick=readPad;$('#pad-clear').onclick=()=>{clearTimeout(pad.timer);pad.strokes=[];pad.cur=null;drawPad()};
+}
+
+/* ───── 공통 입력 ───── */
+$('#b-pad').onclick=()=>{const pp=$('#padpanel');pp.hidden=!pp.hidden;$('#b-pad').textContent=pp.hidden?'각인':'각인 닫기';if(!pp.hidden)setupPad()};
+$('#b-undo').onclick=()=>{A.sel.pop();renderCombo();renderHand()};
+$('#b-clear').onclick=()=>{A.sel=[];renderCombo();renderHand()};
+$('#b-confirm').onclick=()=>submit(curCombo());
+$('#b-pass').onclick=()=>submit([]);
+window.addEventListener('resize',()=>{if(!$('#padpanel').hidden)setupPad()});
+
+function submit(c){
+  if(A.confirmed)return;
+  if(c.length&&comboError(c,A.S.P[A.seat]))return;
+  A.confirmed=true;
+  if(A.kind==='ai')return practiceResolve(c);
+  netSubmit(c);
+  renderPlay();
+}
+function enterRound(){A.sel=[];A.confirmed=false;A.aiPick=null;A.shownRound=A.S.round;
+  if(A.kind==='ai'&&A.S.P.h.foresight&&!A.S.over)A.aiPick=aiChoose(A.S.P.g,A.S.P.h,A.S.field,null);}
+function showOver(){
+  const o=A.S.over,me=A.seat;if(!o){$('#over').hidden=true;return}
+  const win=o.winner===me,draw_=o.winner==='draw';
+  $('#over-title').textContent=draw_?'무승부':win?'승리':'패배';
+  const P=A.S.P,op=me==='h'?'g':'h';
+  $('#over-sub').textContent=(o.reason==='time'?'10라운드가 끝나 체력으로 판정했어요. ':o.reason==='double'?'둘 다 쓰러져서 덜 깎인 쪽을 가렸어요. ':'')+(o.reason==='double'?`나 ${P[me].hp} : ${P[op].hp} 상대`:`나 ${Math.max(0,P[me].hp)} : ${Math.max(0,P[op].hp)} 상대`);
+  const again=$('#b-again');
+  if(A.kind==='net'&&A.seat!=='h'){again.hidden=true;$('#over-note').textContent='방장이 다시 하기를 누르면 새 판이 시작돼요.'}
+  else{again.hidden=false;$('#over-note').textContent=''}
+  $('#over').hidden=false;
+}
+$('#b-lobby').onclick=()=>{$('#over').hidden=true;leave()};
+$('#b-again').onclick=()=>{$('#over').hidden=true;if(A.kind==='ai')startPractice();else hostStart()};
+$('#b-leave2').onclick=()=>leave();
+$('#b-leave1').onclick=()=>leave();
+
+/* ───── 연습 모드 ───── */
+function startPractice(){A.kind='ai';A.seat='h';A.S=newGame();enterRound();show('play');$('#timer').textContent='';renderPlay();$('#over').hidden=true}
+function practiceResolve(c){
+  const S=A.S;let ai=A.aiPick;
+  if(!ai)ai=aiChoose(S.P.g,S.P.h,S.field,S.P.g.foresight?c:null);
+  A.S=resolve(S,{h:c,g:ai});enterRound();renderPlay();showOver();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+$('#b-practice').onclick=startPractice;
+
+/* ───── 온라인 대결 (방 코드) ───── */
+const NET={db:null,uid:null,ready:false,unsub:[],state:'loading',err:null,fs:null,busy:false};
+const FB='https://www.gstatic.com/firebasejs/10.12.2/';
+/* Firestore를 지금까지 쓰던 doc().get/set/update/onSnapshot 모양으로 감싸요.
+   대결 상태 S는 안에 배열이 겹쳐 있어서 글자로 바꿔 저장하고, 읽을 때 되돌려요. */
+function makeDb(fs,db){
+  const enc=o=>{const r={...o};if(r.S&&typeof r.S==='object')r.S=JSON.stringify(r.S);return r};
+  const dec=d=>{if(d&&typeof d.S==='string'){try{d.S=JSON.parse(d.S)}catch(e){d.S=null}}return d};
+  const wrap=s=>({exists:s.exists(),data:()=>dec(s.data())});
+  return {doc(path){const r=fs.doc(db,path);return {
+    get:async()=>wrap(await fs.getDoc(r)),
+    set:o=>fs.setDoc(r,enc(o)),
+    update:o=>fs.updateDoc(r,enc(o)),
+    onSnapshot:(cb,err)=>fs.onSnapshot(r,s=>cb(wrap(s)),err)
+  }}};
+}
+const within=(p,ms=12000)=>Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej({code:'timeout'}),ms))]);
+function fbMsg(e){
+  const c=(e&&e.code)||'',m=String((e&&e.message)||'');
+  if(c==='timeout')return '서버가 응답하지 않아요. 인터넷 연결을 확인하고 다시 시도해 주세요.';
+  if(c==='permission-denied')return '저장이 거부됐어요. Firebase의 Firestore 보안 규칙을 게시했는지 확인해 주세요.';
+  if(c==='not-found'||/does not exist/i.test(m))return 'Firestore 데이터베이스가 아직 없어요. Firebase 콘솔에서 Firestore Database를 만들어 주세요.';
+  if(c==='unavailable')return '서버에 연결하지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요.';
+  return '저장하지 못했어요. 잠시 후 다시 시도해 주세요.'+(c?' ('+c+')':'');
+}
+function authMsg(e){
+  const c=(e&&e.code)||'';
+  if(c==='auth/admin-restricted-operation'||c==='auth/operation-not-allowed')return 'Firebase에서 익명 로그인이 꺼져 있어요. Authentication → 로그인 방법에서 익명을 사용 설정해 주세요. 컴퓨터와 연습은 바로 할 수 있어요.';
+  if(c==='auth/unauthorized-domain')return '이 사이트 주소가 Firebase에 등록되어 있지 않아요. Authentication → 설정 → 승인된 도메인에 추가해 주세요.';
+  if(/api-key/.test(c))return 'Firebase 설정값이 맞지 않아요. firebase-config.js를 다시 확인해 주세요. 컴퓨터와 연습은 바로 할 수 있어요.';
+  if(c==='auth/network-request-failed'||(e instanceof TypeError))return '인터넷에 연결되지 않아 친구와 대결을 할 수 없어요. 연결되면 자동으로 다시 시도해요. 컴퓨터와 연습은 할 수 있어요.';
+  return 'Firebase에 연결하지 못했어요'+(c?' ('+c+')':'')+'. 컴퓨터와 연습은 바로 할 수 있어요.';
+}
+async function initNet(){
+  const cfg=typeof firebaseConfig!=='undefined'?firebaseConfig:null;
+  if(!cfg||!cfg.apiKey||!cfg.projectId||/여기/.test(cfg.apiKey)){NET.state='nocfg';NET.ready=true;return refreshLobby()}
+  NET.state='loading';refreshLobby();
+  try{
+    const [appM,authM,fs]=await Promise.all([import(FB+'firebase-app.js'),import(FB+'firebase-auth.js'),import(FB+'firebase-firestore.js')]);
+    const app=appM.getApps().length?appM.getApp():appM.initializeApp(cfg);
+    const auth=authM.getAuth(app);
+    /* 이 브라우저에 남아 있는 익명 계정을 먼저 찾고, 없으면 새로 만들어요(이어하기에 필요) */
+    let user=await new Promise(r=>{const un=authM.onAuthStateChanged(auth,u=>{r(u);setTimeout(()=>un(),0)})});
+    if(!user)user=(await authM.signInAnonymously(auth)).user;
+    if(!NET.fs)NET.fs=fs.initializeFirestore(app,{ignoreUndefinedProperties:true});
+    NET.db=makeDb(fs,NET.fs);NET.uid=user.uid;NET.state='on';NET.err=null;
+  }catch(e){NET.state='err';NET.err=e;console.warn(e)}
+  NET.ready=true;refreshLobby();
+}
+window.addEventListener('online',()=>{if(NET.state==='err')initNet()});
+const CODE_CH='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+const genCode=()=>Array.from({length:6},()=>CODE_CH[Math.floor(Math.random()*CODE_CH.length)]).join('');
+const roomRef=code=>NET.db.doc('duel/'+code);
+const subRef=(code,s)=>NET.db.doc('duel/'+code+'/sub/'+s);
+function lsGet(){try{return localStorage.getItem('rune-duel-room')}catch(e){return null}}
+function lsSet(v){try{v?localStorage.setItem('rune-duel-room',v):localStorage.removeItem('rune-duel-room')}catch(e){}}
+function netMsg(t){$('#lobby-msg').textContent=t}
+const writeFail=fbMsg;
+async function createRoom(){
+  if(!NET.db||NET.busy)return;
+  netMsg('');let code=null;NET.busy=true;refreshLobby();
+  try{for(let t=0;t<5&&!code;t++){const c=genCode();const s=await within(roomRef(c).get());if(!s.exists)code=c}
+    if(code)await within(roomRef(code).set({v:1,code,hostId:NET.uid,guestId:null,phase:'wait',S:null,deadline:0,at:Date.now()}));
+  }catch(e){NET.busy=false;refreshLobby();return netMsg(fbMsg(e))}
+  NET.busy=false;refreshLobby();
+  if(!code)return netMsg('방을 만들지 못했어요. 다시 눌러 주세요.');
+  joinAs(code,'h');
+}
+async function joinRoom(raw){
+  const code=(raw||'').toUpperCase().replace(/[^A-Z0-9]/g,'');netMsg('');
+  if(code.length!==6)return netMsg('코드 6자리를 입력해 주세요.');
+  if(!NET.db)return netMsg('아직 서버에 연결되지 않았어요.');
+  if(NET.busy)return;
+  NET.busy=true;refreshLobby();
+  const done=t=>{NET.busy=false;refreshLobby();if(t)netMsg(t)};
+  let s;try{s=await within(roomRef(code).get())}catch(e){return done(fbMsg(e))}
+  if(!s.exists)return done('그 코드의 방이 없어요. 코드를 다시 확인해 주세요.');
+  const d=s.data();
+  if(d.hostId===NET.uid){done();return joinAs(code,'h')}
+  if(d.guestId&&d.guestId!==NET.uid)return done('이미 두 명이 들어간 방이에요.');
+  if(!d.guestId){try{await within(roomRef(code).update({guestId:NET.uid}))}catch(e){
+    /* 거의 동시에 다른 사람이 먼저 들어갔으면 규칙에 막혀요 */
+    if(e&&e.code==='permission-denied'){try{const s2=await within(roomRef(code).get());const d2=s2.exists?s2.data():null;if(d2&&d2.guestId&&d2.guestId!==NET.uid)return done('이미 두 명이 들어간 방이에요.')}catch(_){}}
+    return done(fbMsg(e))}}
+  done();joinAs(code,'g');
+}
+function joinAs(code,seat){
+  NET.unsub.forEach(u=>u());NET.unsub=[];
+  A.kind='net';A.seat=seat;A.code=code;A.meta=null;A.S=null;A.subs={h:null,g:null};A.shownRound=0;lsSet(code);
+  $('#w-code').textContent=code;show('wait');renderWaitRoom();
+  NET.unsub.push(roomRef(code).onSnapshot(s=>onRoom(s.exists?s.data():null),()=>netMsg('방 연결이 끊겼어요.')));
+  for(const s of ['h','g'])NET.unsub.push(subRef(code,s).onSnapshot(x=>{A.subs[s]=x.exists?x.data():null;if(A.mode==='play'){renderCombo();renderWait()}hostTick()},()=>{}));
+}
+function renderWaitRoom(){
+  const m=A.meta;const st=$('#w-status'),start=$('#b-start');
+  if(A.seat==='h'){start.hidden=false;start.disabled=!(m&&m.guestId);st.textContent=m&&m.guestId?'상대가 들어왔어요. 시작을 누르면 대결이 시작돼요.':'상대에게 코드를 알려주세요. 상대가 코드를 입력하면 여기에 표시돼요.'}
+  else{start.hidden=true;st.textContent='방장이 시작하기를 기다리는 중이에요.'}
+}
+function onRoom(d){
+  if(!d){netMsg('방이 사라졌어요.');return leave()}
+  A.meta=d;
+  if(d.phase==='wait'||!d.S){if(A.mode!=='wait')show('wait');renderWaitRoom();return}
+  const newRound=!A.S||d.S.round!==A.S.round||(!!d.S.over)!==(!!(A.S&&A.S.over))||(d.S.last&&(!A.S.last||d.S.last.round!==A.S.last.round));
+  A.S=d.S;A.deadline=d.deadline;
+  if(newRound&&A.shownRound!==d.S.round+(d.S.over?100:0)){A.sel=[];A.confirmed=false;A.shownRound=d.S.round+(d.S.over?100:0);if(d.S.last)window.scrollTo({top:0,behavior:'smooth'})}
+  const mine=A.subs[A.seat];if(mine&&mine.round===d.S.round&&!d.S.over)A.confirmed=true;
+  if(A.mode!=='play')show('play');
+  renderPlay();showOver();
+}
+async function hostStart(){
+  if(A.seat!=='h'||!A.meta||!A.meta.guestId)return;
+  const S=newGame();
+  try{await within(roomRef(A.code).set({...A.meta,phase:'play',S,deadline:Date.now()+ROUND_MS,at:Date.now()}))}catch(e){const t=fbMsg(e);netMsg(t);$('#w-status').textContent=t;$('#wait-msg').textContent=t}
+}
+$('#b-start').onclick=hostStart;
+async function netSubmit(c){try{await subRef(A.code,A.seat).set({round:A.S.round,combo:c,at:Date.now()})}catch(e){A.confirmed=false;$('#wait-msg').textContent=writeFail(e);renderCombo()}}
+/* 방장만 라운드를 계산해서 저장해요. 둘 다 확정했거나 시간이 지나면 계산 */
+async function hostTick(){
+  if(A.kind!=='net'||A.seat!=='h'||A.resolving||!A.meta||A.meta.phase!=='play'||!A.S||A.S.over)return;
+  const S=A.S,ok=s=>A.subs[s]&&A.subs[s].round===S.round;
+  if(!(ok('h')&&ok('g'))&&Date.now()<A.deadline+1500)return;
+  const pick=s=>{if(!ok(s))return [];const c=(A.subs[s].combo||[]).filter(i=>Number.isInteger(i)&&i>=0&&i<29);return comboError(c,S.P[s])?[]:c};
+  A.resolving=true;
+  try{const S2=resolve(S,{h:pick('h'),g:pick('g')});await roomRef(A.code).set({...A.meta,phase:S2.over?'over':'play',S:S2,deadline:S2.over?0:Date.now()+ROUND_MS,at:Date.now()})}
+  catch(e){$('#wait-msg').textContent=writeFail(e)}
+  A.resolving=false;
+}
+setInterval(()=>{
+  if(A.kind==='net'&&A.mode==='play'&&A.S&&!A.S.over&&A.deadline){const left=Math.max(0,Math.ceil((A.deadline-Date.now())/1000));const t=$('#timer');t.textContent=`${left}초`;t.classList.toggle('low',left<=10);
+    if(left===0&&!A.confirmed){A.confirmed=true;$('#wait-msg').textContent='시간이 지나 이번 라운드는 쉬어요.';renderCombo();renderHand()}}
+  hostTick();
+},500);
+function leave(){NET.unsub.forEach(u=>u());NET.unsub=[];if(A.kind==='net')lsSet(null);A.kind=null;A.S=null;$('#over').hidden=true;show('lobby');refreshLobby()}
+$('#b-create').onclick=createRoom;
+$('#b-join').onclick=()=>joinRoom($('#code-in').value);
+$('#code-in').addEventListener('keydown',e=>{if(e.key==='Enter')joinRoom(e.target.value)});
+$('#b-copy').onclick=async()=>{try{await navigator.clipboard.writeText(A.code);$('#copy-msg').textContent='복사했어요'}catch(e){const r=document.createRange();r.selectNodeContents($('#w-code'));const s=getSelection();s.removeAllRanges();s.addRange(r);$('#copy-msg').textContent='코드를 길게 눌러 복사하세요'}};
+$('#b-resume').onclick=()=>joinRoom(lsGet());
+function refreshLobby(){
+  const on=!!(NET.db&&NET.uid);
+  $('#b-create').disabled=!on||NET.busy;$('#b-join').disabled=!on||NET.busy;
+  const notes={loading:'서버에 연결하는 중이에요.',on:'방을 만들어 코드를 보내거나, 받은 코드를 입력하세요. 상대는 이 페이지를 열고 코드만 넣으면 돼요.',
+    nocfg:'친구와 대결을 하려면 firebase-config.js에 Firebase 설정값을 넣어야 해요. 컴퓨터와 연습은 바로 할 수 있어요.'};
+  $('#net-note').textContent=NET.state==='err'?authMsg(NET.err):(notes[NET.state]||'');
+  const last=lsGet();$('#resume-row').hidden=!(on&&last);$('#resume-code').textContent=last?`코드 ${last}`:'';
+}
+refreshLobby();
+initNet();
+if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>

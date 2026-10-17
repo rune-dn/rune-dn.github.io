@@ -1,0 +1,725 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>룬어 사전</title>
+<meta name="description" content="실제 룬 문자로 만든 판타지 룬어 사전과 룬 대결">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#e9ebee" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141a26" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="룬어">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+Runic&display=swap">
+<style>
+:root{--bg:#e9ebee;--card:#f6f7f9;--ink:#1c2230;--mute:#566074;--line:#cfd4dc;--el:#1b767c;--ef:#9a6a18;--fo:#7a4fb0;--buf:#b0560f;--heal:#2e7a39;--ctl:#2f5cb0;--mys:#a8367a;--rune:#243049;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141a26;--card:#1d2536;--ink:#e6e9f0;--mute:#9aa4b8;--line:#2c3650;--el:#52c3c9;--ef:#e0b058;--fo:#b995ec;--buf:#f0a35a;--heal:#72c77f;--ctl:#86a8f2;--mys:#f08cc4;--rune:#dfe6f5;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#141a26;--card:#1d2536;--ink:#e6e9f0;--mute:#9aa4b8;--line:#2c3650;--el:#52c3c9;--ef:#e0b058;--fo:#b995ec;--buf:#f0a35a;--heal:#72c77f;--ctl:#86a8f2;--mys:#f08cc4;--rune:#dfe6f5;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 'Gowun Batang','Noto Serif KR',serif;padding:16px 16px 300px;max-width:880px;margin:0 auto}
+h1{font-size:28px;margin:8px 0 2px;letter-spacing:.02em}
+.titlebar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.playbtn{display:inline-block;background:var(--ink);color:var(--bg);text-decoration:none;font-weight:700;font-size:15px;padding:9px 14px;border-radius:10px;white-space:nowrap}
+.playbtn:focus-visible{outline:2px solid var(--ef);outline-offset:2px}
+.sub{color:var(--mute);margin:0 0 14px;font-size:14px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:14px}
+.tab{background:none;border:0;border-bottom:3px solid transparent;color:var(--mute);font:inherit;font-size:17px;font-weight:700;padding:8px 14px;cursor:pointer;margin-bottom:-1px}
+.tab[aria-selected=true]{color:var(--ink);border-bottom-color:var(--ef)}
+.tab small{font-weight:400;font-size:13px;margin-left:4px}
+input{width:100%;padding:12px 14px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;font:inherit}
+input:focus-visible,button:focus-visible{outline:2px solid var(--ef);outline-offset:2px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.chip{border:1px solid var(--line);background:transparent;color:var(--ink);padding:7px 14px;border-radius:999px;font:inherit;font-size:14px;cursor:pointer}
+.chip[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+#subs{display:none}
+#subs.on{display:flex}
+.cnt{color:var(--mute);font-size:13px;margin:14px 0 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:10px}
+.tile{display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-left:6px solid var(--c);border-radius:10px;padding:10px 12px;color:var(--ink);font:inherit;cursor:pointer}
+.tile:active{background:var(--line)}
+.tile[data-c="원소"]{--c:var(--el)}
+.tile[data-c="효과"]{--c:var(--ef)}
+.tile[data-c="형태"]{--c:var(--fo)}
+.tile[data-g="강화"]{--c:var(--buf)}.tile[data-g="회복·보호"]{--c:var(--heal)}.tile[data-g="제어"]{--c:var(--ctl)}.tile[data-g="신비"]{--c:var(--mys)}
+.h{display:flex;justify-content:space-between;align-items:flex-start;gap:6px}
+.g{font:400 40px/1.1 'Noto Sans Runic','Segoe UI Historic','Segoe UI Symbol',sans-serif;color:var(--rune)}
+.t{font-size:12px;color:var(--c);font-weight:700;padding-top:4px}
+.k{font-size:19px;font-weight:700;margin-top:6px}
+.n{font-size:14px;color:var(--mute)}
+.o{font-size:12px;color:var(--mute);margin-top:2px}
+.empty{grid-column:1/-1;color:var(--mute);padding:24px 0}
+[hidden]{display:none!important}
+.prog{display:flex;gap:16px;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.prog div{font-size:13px;color:var(--mute)}
+.prog b{display:block;font-size:22px;color:var(--ink)}
+.bar{height:6px;background:var(--line);border-radius:3px;margin-top:6px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ef)}
+.store{font-size:12px;color:var(--mute);margin:0}
+.srow{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap}
+.tb.warn{color:#c2414b;border-color:#c2414b}
+.tb.warn.armed{background:#c2414b;color:#fff}
+.list{display:grid;gap:10px;margin-top:12px}
+.entry{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:start}
+.eg{font:400 28px/1.2 'Noto Sans Runic','Segoe UI Historic','Segoe UI Symbol',sans-serif;color:var(--rune);letter-spacing:3px;grid-column:1/-1}
+.en{font-size:19px;font-weight:700}
+.ek{font-size:14px;color:var(--mute)}
+.ed{font-size:14px;grid-column:1/-1}
+.eb{display:flex;gap:6px;grid-column:1/-1;margin-top:4px;flex-wrap:wrap;align-items:center}
+.eb span{font-size:12px;color:var(--mute);margin-right:auto}
+.grade{font-size:12px;font-weight:700;border:1px solid currentColor;border-radius:999px;padding:1px 8px;white-space:nowrap}
+.g1{color:var(--mute)}.g2{color:var(--el)}.g3{color:var(--ef)}.g4{color:var(--fo)}.g5{color:#c2414b}
+.tray{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));max-height:60vh;overflow:auto}
+.in{max-width:880px;margin:0 auto;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.tg{font:400 30px/1.2 'Noto Sans Runic','Segoe UI Historic','Segoe UI Symbol',sans-serif;color:var(--rune);letter-spacing:4px;min-width:34px}
+.r{flex:1;min-width:140px;font-size:16px;font-weight:700}
+.r small{display:block;color:var(--mute);font-size:12px;font-weight:400}
+.tb{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:8px;padding:8px 10px;font:inherit;font-size:13px;cursor:pointer}
+.tb.main{background:var(--ink);color:var(--bg);border-color:var(--ink);font-weight:700}
+.tb:disabled{opacity:.5;cursor:default}
+.ab{max-width:880px;margin:0 auto 10px;padding:10px 12px;border:1px solid var(--line);border-left:6px solid var(--ef);border-radius:10px;background:var(--bg)}
+.abh{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.abn{font-size:18px;font-weight:700}
+.new{font-size:12px;font-weight:700;color:var(--el)}
+.abd{font-size:15px;margin-top:2px}
+.abx{font-size:13px;color:var(--mute);margin-top:4px}
+.abx.w{color:var(--ef);font-weight:700}
+.ab.fail{border-left-color:#c2414b}
+.ab.fail .abn{color:#c2414b}
+.tile{touch-action:manipulation}
+.tray{z-index:5}
+.ov{position:fixed;inset:0;background:rgba(10,14,22,.55);display:flex;align-items:flex-end;justify-content:center;z-index:10;padding:16px}
+@media (min-width:600px){.ov{align-items:center}}
+.pn{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:14px;max-width:560px;width:100%;max-height:85vh;overflow:auto;padding:18px 20px}
+.pnh{display:flex;gap:16px;align-items:center}
+.pg{font:400 64px/1 'Noto Sans Runic','Segoe UI Historic','Segoe UI Symbol',sans-serif;color:var(--rune);min-width:48px;text-align:center}
+.pt{font-size:22px;font-weight:700;margin:0}
+.ps{font-size:13px;color:var(--mute)}
+.pd{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:16px 0;font-size:15px}
+.pd dt{color:var(--mute)}
+.pd dd{margin:0}
+.pp{font-size:15px;line-height:1.75;margin:0}
+.pf{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.pts{font-size:12px;color:var(--mute)}
+.boom{font-size:12px;font-weight:700;color:#fff;background:#c2414b;border-radius:999px;padding:1px 8px}
+.badges{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.old{font-size:12px;color:#c2414b;margin-right:auto}
+.rule{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.rule h3{font-size:17px;margin:0 0 6px}
+.rule p,.rule li{font-size:15px;margin:4px 0}
+.rule ul{padding-left:20px;margin:6px 0}
+.chip.boomchip:not([aria-pressed=true]){color:#c2414b;border-color:#c2414b}
+.tile{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.ed,.abd{white-space:pre-wrap}
+.fl{display:block;font-size:13px;color:var(--mute);margin:14px 0 6px}
+.pn input,.pn textarea{background:var(--bg)}
+textarea{width:100%;padding:12px 14px;border:1px solid var(--line);color:var(--ink);border-radius:10px;font:inherit;line-height:1.6;resize:vertical}
+textarea:focus-visible{outline:2px solid var(--ef);outline-offset:2px}
+#ed-g{font-size:34px;letter-spacing:2px;min-width:0}
+.wres{height:44px;overflow:hidden;margin-bottom:8px}
+.wres .abx{margin:2px 0}
+.wchips .lbl{font-size:12px;color:var(--mute);align-self:center;white-space:nowrap}
+.tray.compact .abd,.tray.compact .abx{display:none}
+.whint{font-size:14px;color:var(--mute);margin:4px 0}
+.wbest{display:flex;align-items:center;gap:12px;font-size:17px;font-weight:700}
+.wg{font:400 44px/1 'Noto Sans Runic','Segoe UI Historic','Segoe UI Symbol',sans-serif;color:var(--rune)}
+.wchips{flex-wrap:nowrap;overflow-x:auto;margin-top:6px;padding-bottom:2px}
+.wchips .chip{white-space:nowrap}
+.pad-row{display:flex;gap:8px;justify-content:center;align-items:flex-start}
+.wside{width:72px;flex:none;align-self:stretch;display:flex;flex-direction:column;justify-content:space-between;gap:8px}
+.walts{display:flex;flex-direction:column;gap:6px}
+.wbtns{display:flex;flex-direction:column;gap:6px}
+.wbtns .tb{width:100%;padding:8px 4px}
+#pad{flex:none}
+.walts .lbl{font-size:12px;color:var(--mute);text-align:center;margin-top:4px}
+.walt{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 4px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:inherit;font-size:12px;line-height:1.3;cursor:pointer;word-break:keep-all;text-align:center}
+.walt b{font:400 26px/1.1 'Noto Sans Runic','Segoe UI Historic','Segoe UI Symbol',sans-serif;color:var(--rune)}
+#pad{display:block;touch-action:none;background:var(--card);border:1px solid var(--line);border-radius:12px;cursor:crosshair}
+.padbtns{position:absolute;top:8px;right:8px;display:flex;gap:6px}
+.padbtns .tb{background:var(--bg);padding:6px 10px}
+.wref{margin-top:12px}
+.wref summary{cursor:pointer;color:var(--mute);font-size:14px}
+.wgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px}
+.wcat{font-size:13px;font-weight:700;margin:12px 0 6px}
+.wcat[data-c="원소"]{color:var(--el)}.wcat[data-c="효과"]{color:var(--ef)}.wcat[data-c="형태"]{color:var(--fo)}
+.wgrid div[data-c="원소"]{border-left:3px solid var(--el)}.wgrid div[data-c="효과"]{border-left:3px solid var(--ef)}.wgrid div[data-c="형태"]{border-left:3px solid var(--fo)}
+.wgrid div[data-g="강화"]{border-left-color:var(--buf)}.wgrid div[data-g="회복·보호"]{border-left-color:var(--heal)}.wgrid div[data-g="제어"]{border-left-color:var(--ctl)}.wgrid div[data-g="신비"]{border-left-color:var(--mys)}
+.wgrid div{background:var(--card);border:1px solid var(--line);border-radius:8px;text-align:center;padding:4px 2px;font-size:12px;color:var(--mute)}
+.wgrid b{display:block;font:400 26px/1.2 'Noto Sans Runic','Segoe UI Historic','Segoe UI Symbol',sans-serif;color:var(--rune)}
+</style>
+</head>
+<body>
+<div class="titlebar"><h1>룬어 사전</h1><a class="playbtn" id="playbtn" href="duel.html" target="_blank">룬 대결 하기</a></div>
+<p class="sub">룬을 원소 → 효과 → 형태 순서로 눌러 조합하면 능력이 나오고, 기록한 조합은 도감에 모여요. 룬을 길게 누르면 실제 뜻과 역사를 볼 수 있어요.</p>
+<div class="tabs" role="tablist">
+<button class="tab" role="tab" id="t-dict" aria-selected="true">사전</button>
+<button class="tab" role="tab" id="t-write" aria-selected="false">각인</button>
+<button class="tab" role="tab" id="t-codex" aria-selected="false">도감<small id="tcnt"></small></button>
+<button class="tab" role="tab" id="t-rules" aria-selected="false">규칙</button>
+</div>
+<section id="v-dict">
+<input id="q" type="search" placeholder="예: 불, 카우나, ᚲ" aria-label="룬 검색">
+<div class="chips" id="cats"></div>
+<div class="chips" id="subs"></div>
+<p class="cnt" id="cnt"></p>
+<div class="grid" id="grid"></div>
+</section>
+<section id="v-write" hidden>
+<div class="wres" id="wres" aria-live="polite"><p class="whint">룬 하나를 그리고 잠시 기다리면 알아보고 조합에 넣어요.</p></div>
+<div class="pad-row"><canvas id="pad" aria-label="룬을 그리는 판"></canvas><div class="wside"><div class="walts" id="walts" aria-live="polite"></div><div class="wbtns"><button class="tb" id="wgo" type="button">알아보기</button><button class="tb" id="wclear" type="button">지우기</button></div></div></div>
+<details class="wref"><summary>룬 모양 보기</summary><div id="wgrid"></div></details>
+</section>
+<section id="v-codex" hidden>
+<div class="prog" id="prog"></div>
+<div class="srow"><p class="store" id="store"></p><button class="tb warn" id="reset" type="button" hidden>기록 초기화</button></div>
+<input id="cq" type="search" placeholder="도감에서 이름이나 키워드로 찾기" aria-label="도감 검색" style="margin-top:12px">
+<div class="chips" id="gchips" role="group" aria-label="등급으로 보기"></div>
+<div class="list" id="list"></div>
+</section>
+<section id="v-rules" hidden><div id="rules"></div></section>
+<div class="ov" id="ov" hidden><div class="pn" role="dialog" aria-modal="true" aria-labelledby="pt">
+<div class="pnh"><div class="pg" id="pg"></div><div><h2 class="pt" id="pt"></h2><div class="ps" id="ps"></div></div></div>
+<dl class="pd" id="pd"></dl>
+<p class="pp" id="pp"></p>
+<div class="pf"><button class="tb" id="padd" type="button">조합에 넣기</button><button class="tb main" id="pclose" type="button">닫기</button></div>
+</div></div>
+<div class="ov" id="eo" hidden><div class="pn" role="dialog" aria-modal="true" aria-labelledby="ed-t">
+<div class="pnh"><div class="pg" id="ed-g"></div><div><h2 class="pt" id="ed-t"></h2><div class="ps" id="ed-s"></div></div></div>
+<label class="fl" for="ed-name">이름</label>
+<input id="ed-name" maxlength="40" autocomplete="off">
+<label class="fl" for="ed-lore">능력 설정</label>
+<textarea id="ed-lore" maxlength="600" rows="6"></textarea>
+<p class="ps" id="ed-msg" role="status"></p>
+<div class="pf"><button class="tb" id="ed-reset" type="button" style="margin-right:auto">기본값으로</button><button class="tb" id="ed-cancel" type="button">취소</button><button class="tb main" id="ed-save" type="button">저장</button></div>
+</div></div>
+<div class="tray"><div class="ab" id="ab" hidden></div><div class="in">
+<div class="tg" id="tg"></div>
+<div class="r"><span id="tr"></span><small id="hint"></small></div>
+<button class="tb main" id="rec" disabled>도감에 기록</button>
+<button class="tb" id="undo">되돌리기</button>
+<button class="tb" id="clr">비우기</button>
+</div></div>
+<script>
+const D=[
+['ᚲ','카우나','불','원소','','횃불'],
+['ᛡ','이오르','물','원소','','강물고기'],
+['ᚫ','애스크','바람','원소','','물푸레나무'],
+['ᛠ','에아르','땅','원소','','흙·무덤'],
+['ᚸ','가르','번개','원소','','창'],
+['ᚪ','아크','나무','원소','','참나무'],
+['ᚢ','우루즈','원초적 힘','효과','강화','들소'],
+['ᛞ','다가즈','각성','효과','강화','낮·하루'],
+['ᚠ','페후','증폭','효과','강화','재물'],
+['ᛏ','티와즈','맹세','효과','강화','전쟁의 신'],
+['ᛒ','베르카나','성장','효과','강화','자작나무'],
+['ᛜ','잉와즈','잠재력','효과','강화','풍요의 신'],
+['ᚹ','우은조','치유','효과','회복·보호','기쁨'],
+['ᛇ','에이와즈','부활','효과','회복·보호','주목나무'],
+['ᛊ','소윌로','정화','효과','회복·보호','태양'],
+['ᛉ','알기즈','수호','효과','회복·보호','엘크·사초'],
+['ᛁ','이사','정지','효과','제어','얼음'],
+['ᚾ','나우티즈','속박','효과','제어','필요'],
+['ᛃ','예라','흡수','효과','제어','수확'],
+['ᚷ','게보','계약','효과','제어','선물'],
+['ᛗ','만나즈','정신','효과','신비','인간'],
+['ᚨ','안수즈','예언','효과','신비','신'],
+['ᛈ','페르트','변환','효과','신비','뜻 미상(놀이?)'],
+['ᚱ','라이도','이동','효과','신비','여행'],
+['ᚺ','하갈라즈','재앙','형태','','우박'],
+['ᛖ','에와즈','소환','형태','','말'],
+['ᛟ','오달라','영역','형태','','유산'],
+['ᚦ','투리사즈','방어','형태','','거인'],
+['ᛚ','라구즈','환영','형태','','물']
+];
+/* 직접 정한 이름: 룬 1개, 룬 2개 전부, 같은 룬 3개, 특별 조합. 키는 룬 번호를 오름차순으로 이은 것 */
+const NAMES={"0":"불꽃","1":"물줄기","2":"돌풍","3":"대지의 손","4":"전격","5":"새싹","6":"야수의 힘","7":"깨어남","8":"마력 증폭","9":"기사의 맹세","10":"성장","11":"잠재 개방","12":"치유","13":"부활","14":"정화","15":"수호","16":"정지","17":"속박","18":"흡수","19":"계약","20":"정신 감응","21":"예지","22":"변환","23":"순간 이동","24":"재앙","25":"소환","26":"영역 선포","27":"방벽","28":"환영","0,0":"맹화","1,1":"격류","2,2":"회오리","3,3":"대지 융기","4,4":"연쇄 번개","5,5":"거목","6,6":"광폭화","7,7":"초월","8,8":"극대화","9,9":"서약의 검","10,10":"급성장","11,11":"한계 돌파","12,12":"대치유","13,13":"불멸","14,14":"성결","15,15":"철벽 수호","16,16":"절대 정지","17,17":"결박","18,18":"탐식","19,19":"혈맹","20,20":"정신 지배","21,21":"천리안","22,22":"연금술","23,23":"차원 도약","24,24":"종말","25,25":"군단 소환","26,26":"대결계","27,27":"요새","28,28":"악몽","0,0,0":"멸화","1,1,1":"폭포","2,2,2":"대폭풍","3,3,3":"산맥","4,4,4":"뇌신의 심판","5,5,5":"세계수","6,6,6":"야수화","7,7,7":"현현","8,8,8":"과부하","9,9,9":"영웅의 서약","10,10,10":"거대화","11,11,11":"무한한 가능성","12,12,12":"기적","13,13,13":"윤회","14,14,14":"성광","15,15,15":"불괴","16,16,16":"시간 정지","17,17,17":"영겁의 사슬","18,18,18":"심연의 아가리","19,19,19":"영혼 계약","20,20,20":"자아 붕괴","21,21,21":"신탁","22,22,22":"만물 변환","23,23,23":"차원문","24,24,24":"멸망","25,25,25":"강림","26,26,26":"절대 영역","27,27,27":"난공불락","28,28,28":"몽환경","0,0,8":"폭발","1,12,26":"치유의 샘","3,15,27":"바위 방벽","4,17,24":"속박의 번개 폭풍","5,10,26":"숲 지대","2,20,28":"속삭이는 환영","0,1":"증기 폭발","0,2":"열풍","0,3":"용암","0,4":"벼락불","0,5":"들불","1,2":"폭우","1,3":"늪","1,4":"감전","1,5":"생명의 비","2,3":"모래폭풍","2,4":"뇌운","2,5":"꽃보라","3,4":"대지 방전","3,5":"숲","4,5":"번개 덩굴","0,6":"화염 강타","0,7":"각성의 불꽃","0,8":"업화","0,9":"불의 서약","0,10":"번지는 불길","0,11":"잠든 불씨","0,12":"따스한 불꽃","0,13":"불사조","0,14":"성화","0,15":"화염 수호","0,16":"꺼지지 않는 불","0,17":"화염 사슬","0,18":"열 흡수","0,19":"화염 계약","0,20":"분노의 불꽃","0,21":"불꽃 점술","0,22":"용해","0,23":"화염 질주","1,6":"해일","1,7":"샘솟는 물","1,8":"대홍수","1,9":"성수 서약","1,10":"밀물","1,11":"깊은 샘","1,12":"생명수","1,13":"생명의 샘","1,14":"성수","1,15":"물의 장막","1,16":"빙결","1,17":"물의 감옥","1,18":"소용돌이","1,19":"인어의 계약","1,20":"고요한 수면","1,21":"물거울","1,22":"안개","1,23":"물길","2,6":"강풍","2,7":"바람의 노래","2,8":"태풍","2,9":"바람의 맹세","2,10":"순풍","2,11":"잠든 바람","2,12":"치유의 산들바람","2,13":"생명의 숨결","2,14":"맑은 바람","2,15":"바람 장벽","2,16":"무풍","2,17":"회오리 감옥","2,18":"진공","2,19":"실프의 계약","2,20":"바람의 속삭임","2,21":"풍향 점술","2,22":"깃털화","2,23":"질풍","3,6":"대지 강타","3,7":"대지 각성","3,8":"지각 융기","3,9":"바위의 맹세","3,10":"돌기둥","3,11":"광맥","3,12":"대지의 품","3,13":"흙의 소생","3,14":"정화의 모래","3,15":"암석 갑옷","3,16":"석화","3,17":"대지의 감옥","3,18":"모래늪","3,19":"대지의 계약","3,20":"부동심","3,21":"지맥 감지","3,22":"금속화","3,23":"땅굴","4,6":"뇌격","4,7":"번개 각성","4,8":"낙뢰","4,9":"뇌신의 맹세","4,10":"번개 가지","4,11":"축전","4,12":"심장 박동","4,13":"뇌성 소생","4,14":"정화의 섬광","4,15":"뇌전 방패","4,16":"마비","4,17":"전류 사슬","4,18":"피뢰","4,19":"천둥 계약","4,20":"번뜩임","4,21":"섬광 예지","4,22":"플라즈마","4,23":"번개 도약","5,6":"거목 강타","5,7":"숲의 각성","5,8":"대삼림","5,9":"드루이드의 맹세","5,10":"만개","5,11":"씨앗","5,12":"숲의 치유","5,13":"재생의 새싹","5,14":"정화의 꽃","5,15":"수피 갑옷","5,16":"나이테 봉인","5,17":"덩굴 속박","5,18":"흡혈 덩굴","5,19":"엘프의 계약","5,20":"몽환의 꽃향기","5,21":"숲의 신탁","5,22":"목인화","5,23":"뿌리 이동","0,24":"대화재","0,25":"불의 정령","0,26":"화염 지대","0,27":"화염 방벽","0,28":"아지랑이","1,24":"쓰나미","1,25":"물의 정령","1,26":"수몰 지대","1,27":"수막","1,28":"신기루","2,24":"폭풍","2,25":"바람의 정령","2,26":"폭풍의 눈","2,27":"기류 방벽","2,28":"바람 그림자","3,24":"지진","3,25":"골렘","3,26":"대지 결계","3,27":"암벽","3,28":"모래 분신","4,24":"뇌우","4,25":"뇌수","4,26":"방전 지대","4,27":"뇌전 장벽","4,28":"섬광 분신","5,24":"숲의 분노","5,25":"트렌트","5,26":"원시림","5,27":"가시 방벽","5,28":"숲의 환각","6,7":"광전사","6,8":"괴력","6,9":"투지","6,10":"거인화","6,11":"야성 해방","6,12":"재생력","6,13":"불굴","6,14":"성스러운 일격","6,15":"철벽","6,16":"부동의 힘","6,17":"제압","6,18":"포식","6,19":"피의 계약","6,20":"기합","6,21":"전투 감각","6,22":"야수 변신","6,23":"돌진","7,8":"폭주","7,9":"영웅의 각성","7,10":"진화","7,11":"잠재력 해방","7,12":"기상","7,13":"환생","7,14":"깨달음","7,15":"경계","7,16":"찰나","7,17":"해방","7,18":"마력 각성","7,19":"영혼 공명","7,20":"명경지수","7,21":"예지몽","7,22":"탈피","7,23":"신속","8,9":"결의","8,10":"비대화","8,11":"잠재 폭발","8,12":"대회복","8,13":"완전 부활","8,14":"대정화","8,15":"강화 결계","8,16":"영구 동결","8,17":"강철 사슬","8,18":"흡수 폭주","8,19":"대가 증폭","8,20":"정신 폭발","8,21":"만리안","8,22":"대변환","8,23":"초가속","9,10":"수련","9,11":"운명의 서약","9,12":"성기사의 손길","9,13":"맹세의 귀환","9,14":"성전","9,15":"수호 기사","9,16":"불변의 맹세","9,17":"기아스","9,18":"피의 서약","9,19":"언약","9,20":"신념","9,21":"숙명","9,22":"변절","9,23":"원정","10,11":"개화","10,12":"재생","10,13":"회춘","10,14":"정화의 싹","10,15":"성채","10,16":"불로","10,17":"휘감기","10,18":"양분 흡수","10,19":"공생","10,20":"성숙","10,21":"시간 가속","10,22":"변태","10,23":"확산","11,12":"자가 치유","11,13":"잠든 생명","11,14":"본성 해방","11,15":"숨은 방패","11,16":"동면","11,17":"잠재력 봉인","11,18":"재능 탈취","11,19":"재능 계약","11,20":"영감","11,21":"운명 개척","11,22":"변이","11,23":"도약","12,13":"소생","12,14":"해독","12,15":"축복","12,16":"지혈","12,17":"치유 봉쇄","12,18":"생명 흡수","12,19":"생명 계약","12,20":"마음 치유","12,21":"예방","12,22":"저주 반전","12,23":"치유 전이","13,14":"성스러운 귀환","13,15":"불사의 가호","13,16":"가사 상태","13,17":"망령 속박","13,18":"영혼 흡수","13,19":"사령 계약","13,20":"혼 불러오기","13,21":"전생 기억","13,22":"언데드화","13,23":"영혼 이동","14,15":"성역","14,16":"정화 봉인","14,17":"퇴마","14,18":"저주 흡수","14,19":"신성 계약","14,20":"평정","14,21":"계시","14,22":"축성","14,23":"정화의 행진","15,16":"절대 방어","15,17":"수호의 사슬","15,18":"피해 흡수","15,19":"수호 계약","15,20":"정신 방벽","15,21":"위험 감지","15,22":"반사","15,23":"호위","16,17":"봉인","16,18":"시간 흡수","16,19":"시간 계약","16,20":"무념","16,21":"운명 고정","16,22":"결정화","16,23":"시간 왜곡","17,18":"흡혈 사슬","17,19":"노예 계약","17,20":"세뇌","17,21":"운명의 굴레","17,22":"저주","17,23":"끌어당김","18,19":"등가 교환","18,20":"기억 흡수","18,21":"지식 흡수","18,22":"마력 전환","18,23":"흡인","19,20":"정신 연결","19,21":"운명 계약","19,22":"거래","19,23":"귀환 계약","20,21":"투시","20,22":"매혹","20,23":"정신 투사","21,22":"운명 변경","21,23":"선견 회피","22,23":"위치 교환","6,24":"파괴","6,25":"야수 소환","6,26":"투기장","6,27":"강철 방패","6,28":"위압","7,24":"폭주 재앙","7,25":"영웅 소환","7,26":"각성의 영역","7,27":"반응 방어","7,28":"자각몽","8,24":"대재앙","8,25":"거대 소환","8,26":"증폭 결계","8,27":"강화 방벽","8,28":"환영 증식","9,24":"심판","9,25":"기사 소환","9,26":"서약의 영역","9,27":"맹세의 방패","9,28":"영웅의 잔상","10,24":"역병","10,25":"성장하는 소환수","10,26":"성장의 정원","10,27":"자라는 성벽","10,28":"커지는 그림자","11,24":"시한폭탄","11,25":"알 소환","11,26":"가능성의 영역","11,27":"잠재 방벽","11,28":"평행 분신","12,24":"치유 폭주","12,25":"치유 정령","12,26":"치유의 영역","12,27":"치유 방벽","12,28":"치유의 환상","13,24":"망자의 재앙","13,25":"망령 소환","13,26":"묘지","13,27":"망자의 방벽","13,28":"유령","14,24":"천벌","14,25":"천사 소환","14,26":"신성 지대","14,27":"신성 방벽","14,28":"빛의 환영","15,24":"반격","15,25":"수호령","15,26":"수호 결계","15,27":"금강벽","15,28":"수호 환영","16,24":"빙하기","16,25":"시간 정령","16,26":"정지 결계","16,27":"시간 방벽","16,28":"잔상","17,24":"사슬 폭풍","17,25":"구속 마수","17,26":"감옥","17,27":"사슬 방벽","17,28":"환영 감옥","18,24":"공허","18,25":"흡혈귀 소환","18,26":"흡수 영역","18,27":"흡수 방벽","18,28":"흡수의 환영","19,24":"계약의 대가","19,25":"계약 소환","19,26":"계약의 영역","19,27":"계약 방벽","19,28":"거짓 계약","20,24":"정신 붕괴","20,25":"영체 소환","20,26":"정신 영역","20,27":"정신 장벽","20,28":"환각","21,24":"예언된 재앙","21,25":"예언자 소환","21,26":"운명의 장","21,27":"예지 방어","21,28":"미래 환영","22,24":"변이 재앙","22,25":"키메라","22,26":"왜곡 영역","22,27":"반사 방벽","22,28":"변신","23,24":"유성 낙하","23,25":"차원 소환","23,26":"공간 도약진","23,27":"회피 방벽","23,28":"그림자 걸음","24,25":"마왕 강림","24,26":"멸망의 땅","24,27":"반격의 벽","24,28":"공포","25,26":"소환진","25,27":"수호수","25,28":"환영 분신","26,27":"결계진","26,28":"환상 세계","27,28":"허상 방벽"};
+/* 룬 3개 이상 조합에 붙는 수식어: [꾸밈말, ~의, 이름씨] */
+const MOD=[
+['타오르는','화염의','불꽃'],['흐르는','물의','물결'],['휘몰아치는','바람의','돌풍'],['단단한','대지의','바위'],['번뜩이는','번개의','뇌광'],['푸르른','숲의','덩굴'],
+['사나운','야수의','맹수'],['깨어난','각성의','눈'],['거대한','증폭의','극점'],['고결한','맹세의','검'],['자라나는','성장의','새싹'],['잠든','잠재의','씨앗'],
+['따스한','치유의','손길'],['되살아난','부활의','불사조'],['성스러운','정화의','빛'],['굳건한','수호의','방패'],
+['멈춰진','정지의','얼음'],['얽매인','속박의','사슬'],['굶주린','흡수의','심연'],['맺어진','계약의','인장'],
+['고요한','정신의','의지'],['예견된','예언의','별'],['뒤틀린','변환의','거울'],['질주하는','이동의','문'],
+['끔찍한','재앙의','멸망'],['불려온','소환의','정령'],['드넓은','영역의','지대'],['견고한','방어의','성벽'],['아른거리는','환영의','그림자']
+];
+const GRADE=['','기초','일반','고급','희귀','전설'];
+const KW=D.map(r=>r[2]);
+/* 규칙: 분류별 개수 제한, 룬 점수, 등급 구간, 반대 룬(폭주), 원소 상성 */
+const LIMIT={원소:3,효과:2,형태:1};
+/* 위력 = 기본 위력(원소 1개당 10, 원소가 없으면 5) × 효과 1개마다 1.5 × 형태가 있으면 2 */
+const BASE=10,NOEL=5,MUL_EF=1.5,MUL_FO=2;
+function power(ix){const c=t=>ix.filter(i=>D[i][3]===t).length,e=c('원소');return (e?BASE*e:NOEL)*MUL_EF**c('효과')*MUL_FO**c('형태')}
+const pw=ix=>Math.round(power(ix));
+const GCUT=[15,30,45,67.5],GRANGE=['','15 이하','20~30','40~45','60~68','90'];
+const TOTAL_VALID=47879; /* 개수 제한(원소 3·효과 2·형태 1, 총 5개)을 지키는 조합 수 (순서 무관, 같은 룬 중복 허용) */
+function gradeOf(ix){const s=power(ix),g=GCUT.findIndex(t=>s<=t);return g<0?5:g+1}
+const OPP=[['치유','재앙'],['수호','재앙'],['정지','이동'],['성장','정지'],['각성','속박'],['원초적 힘','정신'],['치유','흡수'],['맹세','변환']];
+const CLASH=[[['불','물'],'불과 물은 상극이라 부딪히면 증기 폭발이 일어나요.'],[['바람','불'],'바람이 불을 키워 위력이 커져요.'],[['물','번개'],'물이 번개의 위력을 높여요.'],[['땅','물'],'땅이 물을 빨아들여 물의 힘이 약해져요.'],[['나무','불'],'나무는 불에 약해 쉽게 타버려요.'],[['나무','물'],'나무는 물을 머금어 더 잘 자라요.'],[['나무','땅'],'나무는 땅에 뿌리내려 더 잘 자라요.']];
+const BOOM='반대되는 힘이 부딪혀 통제를 벗어난 채 발현되어, 주변과 시전자 모두에게 영향을 줄 수 있어요.';
+const rune=k=>D[KW.indexOf(k)][0];
+function oppOf(ix){const n=ix.map(i=>KW[i]);return OPP.filter(p=>n.includes(p[0])&&n.includes(p[1]))}
+function failOf(ix){
+  const bi=ix.findIndex((v,i)=>i&&RK[D[v][3]]<RK[D[ix[i-1]][3]]);
+  if(bi>0){const a=D[ix[bi-1]],b=D[ix[bi]];return [a[0]+' '+a[2]+'('+a[3]+') 뒤에 '+b[0]+' '+b[2]+'('+b[3]+')가 와서 마력이 흩어졌어요.','룬은 원소 → 효과 → 형태 순서로 놓아야 해요. 되돌리기로 마지막 룬을 빼거나 다시 쌓아 보세요.']}
+  for(const c in LIMIT){
+    const n=ix.filter(i=>D[i][3]===c).length;
+    if(n>LIMIT[c])return [c+' 룬이 '+n+'개라 마력이 버티지 못하고 흩어졌어요.',c+' 룬은 '+LIMIT[c]+'개까지만 넣을 수 있어요. 되돌리기로 마지막 룬을 빼 보세요.'];
+  }
+  return null;
+}
+const keyOf=ix=>ix.slice().sort((a,b)=>a-b).join(',');
+function nameOf(ix){
+  const s=ix.slice().sort((a,b)=>a-b),k=s.join(',');
+  if(NAMES[k])return NAMES[k];
+  const core=NAMES[s[0]+','+s[1]],ex=s.slice(2);
+  let n=core;
+  if(ex[1]!=null)n=MOD[ex[1]][1]+' '+n;
+  n=MOD[ex[0]][0]+' '+n;
+  if(ex[2]!=null)n+='의 '+MOD[ex[2]][2];
+  return n;
+}
+const EL={불:'불꽃',물:'물',바람:'바람',땅:'대지',번개:'번개',나무:'나무'};
+const EF={'원초적 힘':'원초적인 힘을 실어',각성:'잠든 힘을 깨워',증폭:'위력을 크게 증폭시켜',맹세:'맹세로 결의를 다져',성장:'빠르게 성장시켜',잠재력:'숨은 잠재력을 끌어내',치유:'상처를 치유하고',부활:'쓰러진 것을 되살리고',정화:'부정한 것을 정화하고',수호:'대상을 수호하고',정지:'움직임을 멈추게 하고',속박:'대상을 속박하고',흡수:'상대의 힘을 흡수하고',계약:'계약으로 묶어',정신:'정신에 작용하고',예언:'앞날을 내다보고',변환:'성질을 바꾸고',이동:'순식간에 이동시키고'};
+const FN={재앙:'재앙',소환:'소환체',영역:'영역',방어:'방벽',환영:'환영'};
+function josa(w){const c=w.charCodeAt(w.length-1)-44032;return c>=0&&c%28!==0&&c%28!==8?'으로':'로'}
+function describe(ix){
+  const R=ix.map(i=>D[i]);
+  const els=R.filter(r=>r[3]==='원소').map(r=>r[2]),efs=R.filter(r=>r[3]==='효과').map(r=>r[2]),fos=R.filter(r=>r[3]==='형태').map(r=>r[2]);
+  const subj=els.length?[...new Set(els)].map(k=>EL[k]).join('·')+'의 힘이':'순수한 마력이';
+  const mid=efs.length?[...new Set(efs)].map(k=>EF[k]).join(', ')+', ':'';
+  const fj=[...new Set(fos)].map(k=>FN[k]).join('·');
+  return subj+' '+mid+(fos.length?fj+josa(fj)+' 발현됩니다.':'대상에게 곧바로 발현됩니다.');
+}
+function notes(ix){
+  const names=ix.map(i=>KW[i]),has=k=>names.includes(k),o=[];
+  CLASH.forEach(([p,t])=>{if(has(p[0])&&has(p[1]))o.push([t])});
+  if(new Set(names).size<names.length)o.push(['같은 룬이 겹쳐 위력이 강해지지만 마력 소모도 커져요.']);
+  return o;
+}
+const RK={원소:0,효과:1,형태:2};
+/* 실제 룬 정보: [원래 이름, 소리, 실제 뜻, 체계와 위치, 이야기] */
+const EF24='엘더 푸타르크',AS='앵글로색슨 푸소르크';
+const INFO={
+'ᚠ':['*fehu','f','가축, 재산',EF24+' 1번째 · 첫째 무리','고대 게르만 사회에서 가축은 곧 재산이었어요. 영어 fee, 독일어 Vieh(가축)와 같은 뿌리예요. 고대 영어 룬 시는 “재물은 모두에게 위안이지만 아낌없이 나눠야 한다”고 노래하고, 노르웨이와 아이슬란드 룬 시는 “재물은 친족 사이에 다툼을 부른다”고 경고해요.'],
+'ᚢ':['*ūruz','u','오록스(멸종한 야생 소)',EF24+' 2번째 · 첫째 무리','고대 영어 룬 시는 뿔이 크고 사나운 오록스를 “황무지를 누비는 용맹한 짐승”으로 묘사해요. 노르드 룬 시에서는 úr이 ‘이슬비’나 ‘쇠찌꺼기’를 뜻해서, 원래 뜻이 짐승인지 물인지는 학자마다 의견이 갈려요.'],
+'ᚦ':['*þurisaz','th(θ)','거인(서스)',EF24+' 3번째 · 첫째 무리','북유럽 신화의 거인 종족 þurs에서 온 이름이에요. 노르드 룬 시는 거인을 재앙을 부르는 존재로 그리고, 고대 영어에서는 이름이 þorn(가시)으로 바뀌어 “가시는 날카로워 잡는 이를 해친다”고 노래해요. 이 글자는 영어 알파벳 þ(쏜)으로 남아 중세까지 쓰였어요.'],
+'ᚨ':['*ansuz','a','신(아스 신족)',EF24+' 4번째 · 첫째 무리','오딘·토르 같은 아스 신족을 가리켜요. 아이슬란드 룬 시는 이 룬을 오딘과 연결하고, 노르웨이 룬 시에서는 óss가 ‘강어귀’를 뜻해요. 고대 영어에서는 ōs(입, 말)로 해석되었고, 모음이 변하면서 이 룬에서 ᚪ 아크와 ᚫ 애스크가 갈라져 나왔어요.'],
+'ᚱ':['*raidō','r','말 타기, 여행',EF24+' 5번째 · 첫째 무리','세 룬 시가 모두 ‘말 타기’를 노래해요. 고대 영어 룬 시는 “집 안에 앉아 있는 용사에게 말 타기는 쉽지만, 힘센 말을 타고 먼 길을 달리는 이에게는 고되다”고 재치 있게 표현해요.'],
+'ᚲ':['*kaunan / *kenaz','k','종기, 또는 횃불',EF24+' 6번째 · 첫째 무리','원래 이름은 ‘종기, 궤양’을 뜻하는 kaunan으로 보는 견해가 많고, 노르드 룬 시도 kaun(종기)을 노래해요. 고대 영어에서는 cēn(횃불)으로 불리며 “횃불은 귀족들이 쉬는 곳에서 밝게 타오른다”고 해요. 이 사전의 ‘불’은 이 횃불의 뜻에서 왔어요.'],
+'ᚷ':['*gebō','g','선물',EF24+' 7번째 · 첫째 무리','영어 gift와 같은 뿌리예요. 게르만 사회에서 선물은 주군과 전사 사이의 의리를 맺는 수단이었고, 고대 영어 룬 시는 “선물은 사람의 자랑이자 명예”라고 해요. 이 사전의 ‘계약’은 주고받는 약속의 뜻에서 왔어요. 후기 북유럽의 영거 푸타르크에서는 사라졌어요.'],
+'ᚹ':['*wunjō','w','기쁨',EF24+' 8번째 · 첫째 무리','고대 영어 룬 시는 “슬픔과 고통을 모르고 풍족하게 사는 이에게 기쁨이 있다”고 해요. 이 룬은 고대 영어를 라틴 문자로 적을 때 w 소리 글자 ƿ(윈)로 빌려 쓰여 중세까지 남았어요. 영거 푸타르크에서는 사라졌어요.'],
+'ᚺ':['*hagalaz','h','우박',EF24+' 9번째 · 둘째 무리의 첫 룬','영어 hail과 같은 뿌리예요. 룬 시들은 “우박은 가장 흰 곡식, 하늘에서 쏟아져 바람에 휘날리다 결국 물이 된다”고 노래해요. 한순간에 농사를 망치는 파괴와, 그 뒤에 오는 변화를 함께 담은 룬이에요.'],
+'ᚾ':['*naudiz','n','필요, 고난',EF24+' 10번째 · 둘째 무리','영어 need와 같은 뿌리예요. 고대 영어 룬 시는 “필요는 가슴을 조이지만, 일찍 귀 기울이면 도움과 구원이 된다”고 하고, 노르드 룬 시는 속박된 자의 굴레를 노래해요. 이 사전의 ‘속박’은 여기서 왔어요.'],
+'ᛁ':['*īsaz','i','얼음',EF24+' 11번째 · 둘째 무리','영어 ice와 같은 뿌리예요. 룬 시들은 얼음을 “강 위의 넓은 다리”, “유리처럼 반짝이는 보석 같은 바닥”으로 묘사해요. 획 하나로만 된 가장 단순한 룬이에요.'],
+'ᛃ':['*jēra','j(영어 y 소리)','해(年), 풍년',EF24+' 12번째 · 둘째 무리','영어 year와 같은 뿌리예요. 고대 영어 룬 시는 “신이 땅에 밝은 열매를 내려 부자와 가난한 이 모두에게 주는 때”라고 노래해요. 이 사전의 ‘흡수’는 결실을 거두어들인다는 뜻에서 왔어요.'],
+'ᛇ':['*eihwaz / *īwaz','미상(ï 또는 æ로 추정)','주목나무',EF24+' 13번째 · 둘째 무리','주목은 수천 년을 살고 독이 있으며 활을 만드는 나무였어요. 고대 영어 룬 시는 “겉은 거칠지만 단단히 뿌리내리고 불을 지키는 나무”라고 해요. 오래 사는 나무라서 이 사전에서는 ‘부활’이 됐어요. 원래 어떤 소리였는지는 지금도 논쟁 중이에요.'],
+'ᛈ':['*perþ- (불확실)','p','뜻 미상',EF24+' 14번째 · 둘째 무리','24룬 중 뜻이 가장 수수께끼인 룬이에요. 고대 영어 룬 시만 peorð를 언급하는데, “용사들이 술자리에서 웃고 즐기는 것”이라고 해서 주사위 컵이나 놀이 판으로 추측해요. 비문에도 드물게 나와요. 이 사전의 ‘변환’은 운을 건 주사위 놀이 해석에서 왔어요.'],
+'ᛉ':['*algiz (불확실)','z(후기에 r 소리)','엘크 또는 사초로 추정',EF24+' 15번째 · 둘째 무리','원래 이름은 확실하지 않아요. 고대 영어 룬 시는 eolhx(사초, 늪지 풀)를 “물가에 자라 붙잡는 이를 피투성이로 만드는 날카로운 풀”로 묘사해요. 날카로운 풀이 스스로를 지키듯 ‘보호’라는 뜻은 현대에 더해진 해석이에요. 단어 끝의 z 소리를 적던 룬인데, 이 소리는 나중에 r과 합쳐졌어요.'],
+'ᛊ':['*sōwilō','s','태양',EF24+' 16번째 · 둘째 무리','룬 시들은 태양을 “땅의 빛”, “바다를 건너는 뱃사람들의 희망”으로 노래해요. 모든 것을 비추고 어둠을 걷어내는 빛이라서 이 사전에서는 ‘정화’가 됐어요.'],
+'ᛏ':['*tīwaz','t','티르 신',EF24+' 17번째 · 셋째 무리의 첫 룬','법과 전쟁의 신 티르(Týr)를 가리키며, 화요일(Tuesday)의 어원이에요. 신화에서 티르는 늑대 펜리르를 묶기 위해 한 손을 내주었어요. 『시의 에다』에는 승리를 원하면 칼에 룬을 새기고 티르의 이름을 두 번 부르라는 구절이 있어요. 이 사전의 ‘맹세’는 희생을 감수한 티르의 이야기에서 왔어요.'],
+'ᛒ':['*berkanan','b','자작나무',EF24+' 18번째 · 셋째 무리','영어 birch와 같은 뿌리예요. 룬 시들은 “잎이 가장 푸른 가지”를 노래해요. 자작나무는 봄에 가장 먼저 잎을 틔우는 나무라 새 생명과 출발의 상징으로 여겨졌고, 이 사전에서는 ‘성장’이 됐어요.'],
+'ᛖ':['*ehwaz','e','말(馬)',EF24+' 19번째 · 셋째 무리','라틴어 equus(말)와 같은 뿌리예요. 고대 영어 룬 시는 “말은 귀족들의 기쁨, 발굽을 자랑하는 말 위에서 용사는 당당하다”고 노래해요. 타고 다니는 동반자라서 이 사전에서는 ‘소환’이 됐어요. 영거 푸타르크에서는 사라졌어요.'],
+'ᛗ':['*mannaz','m','사람',EF24+' 20번째 · 셋째 무리','영어 man과 같은 뿌리예요. 고대 영어 룬 시는 “사람은 기쁨 속에서 친족에게 사랑받지만, 결국엔 서로 떠나야 한다”고 해요. 사람의 마음과 지성을 담아 이 사전에서는 ‘정신’이 됐어요.'],
+'ᛚ':['*laguz / *laukaz','l','물, 호수 (또는 부추)',EF24+' 21번째 · 셋째 무리','룬 시들은 바다·폭포·호수를 노래하며, 고대 영어 룬 시는 험한 파도 위의 뱃사람을 그려요. 다른 해석으로는 ‘부추(laukaz)’가 있는데, 부추는 다산과 보호의 상징이라 부적 비문에 자주 나와요. 일렁이는 물결의 이미지로 이 사전에서는 ‘환영’이 됐어요.'],
+'ᛜ':['*ingwaz','ng(ŋ)','잉(Ing) 신',EF24+' 22번째 · 셋째 무리','풍요의 신 프레이르의 다른 이름인 잉비(Yngvi)와 관련돼요. 고대 영어 룬 시는 “잉은 동쪽 데인족 사이에서 처음 사람들에게 보였다”고 해요. 씨앗을 품은 풍요의 뜻으로 이 사전에서는 ‘잠재력’이 됐어요.'],
+'ᛞ':['*dagaz','d','낮, 하루',EF24+' 23번째 · 셋째 무리','영어 day와 같은 뿌리예요. 고대 영어 룬 시는 “낮은 주인이 보낸 빛, 모두에게 희망과 기쁨”이라고 해요. 이 사전의 ‘각성’은 어둠이 끝나고 낮이 밝아오는 새벽의 이미지에서 왔어요.'],
+'ᛟ':['*ōþala','o','물려받은 땅, 고향',EF24+' 24번째 · 셋째 무리','고대 영어 룬 시는 “자기 집에서 풍요를 누리는 것은 누구에게나 소중하다”고 해요. 조상에게 물려받아 지키는 땅이라서 이 사전에서는 ‘영역’이 됐어요. 비문에 따라 ᛞ와 ᛟ의 순서가 서로 바뀌어 나타나서, 어느 쪽이 마지막 룬인지는 정해져 있지 않아요.'],
+'ᚪ':['āc','a','참나무',AS+' 추가 룬','고대 영어에서 모음이 변하면서 ᚨ 안수즈 계열에서 갈라져 나온 룬이에요. 고대 영어 룬 시는 “참나무는 땅에서 도토리로 돼지를 살찌우고, 바다 위에서는 배가 되어 그 굳건함을 시험받는다”고 노래해요. 이 사전에서는 ‘나무’ 원소가 됐어요.'],
+'ᚫ':['æsc','æ','물푸레나무',AS+' 추가 룬','ᚪ 아크처럼 ᚨ 안수즈에서 갈라져 나온 룬이에요. 고대 영어 룬 시는 “물푸레나무는 아주 높고 사람들에게 귀하며, 단단히 버티며 많은 이와 맞서 싸운다”고 해요. 창 자루를 물푸레나무로 만들었기 때문이에요. 북유럽 신화의 세계수 이그드라실도 물푸레나무로 전해져요. 바람에 흔들리는 키 큰 나무라서 이 사전에서는 ‘바람’이 됐어요.'],
+'ᛠ':['ēar','ea','흙, 무덤 (추정)',AS+' 추가 룬','고대 영어 룬 시의 마지막 연에 나오는 룬으로, “육신이 식어 땅을 반려로 삼을 때, 모든 용사에게 무덤은 두렵다”고 노래해요. 정확한 뜻은 연구자마다 의견이 다르지만, 대체로 흙이나 무덤으로 봐요. 이 사전에서는 ‘땅’ 원소가 됐어요.'],
+'ᛡ':['īor','io','강물고기 (비버나 장어로 추정)',AS+' 추가 룬','고대 영어 룬 시는 “물에 살면서 뭍에서 먹이를 얻는 강물고기, 물에 둘러싸인 아름다운 집에서 즐겁게 산다”고 해요. 어떤 동물인지는 분명하지 않아서 비버, 장어, 심지어 북유럽 신화의 바다뱀까지 여러 해석이 있어요. 물과 땅을 오가는 생물이라 이 사전에서는 ‘물’ 원소가 됐어요.'],
+'ᚸ':['gār','g(단단한 g 소리)','창',AS+' 추가 룬','고대 영어 룬 시에는 없고, 잉글랜드 북부 노섬브리아에서 가장 나중에 더해진 룬들 가운데 하나예요. 고대 영어에서 g 소리가 여러 갈래로 나뉘자, 원래의 단단한 g를 따로 적기 위해 만들어진 것으로 보여요. 하늘에서 내리꽂는 창의 이미지로 이 사전에서는 ‘번개’ 원소가 됐어요.']
+};
+let infoIx=null,infoBack=null,lastTap={};
+function openInfo(i){
+  const r=D[i],f=INFO[r[0]];if(!f)return;
+  infoIx=i;infoBack=document.activeElement;
+  $('#pg').textContent=r[0];$('#pt').textContent=r[1]+' · '+r[2];$('#ps').textContent=f[3];
+  const dl=$('#pd');dl.replaceChildren();
+  [['원래 이름',f[0]],['소리',f[1]],['실제 뜻',f[2]],['이 사전에서',r[2]+' ('+r[3]+(r[4]?' · '+r[4]:'')+')']].forEach(([a,b])=>dl.append(el('dt',null,a),el('dd',null,b)));
+  $('#pp').textContent=f[4];
+  $('#ov').hidden=false;$('#pclose').focus();
+}
+function closeInfo(){$('#ov').hidden=true;infoIx=null;if(infoBack&&infoBack.focus)infoBack.focus()}
+let cat='전체',sub='전체',q='',cq='',cg='',T=[],tab='dict';
+/* 도감: 키 -> 처음 기록한 시각 */
+let codex=new Map(),store=null,storeMsg='';
+const $=s=>document.querySelector(s);
+function el(t,c,x){const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+function chips(box,items,get,set){
+  box.replaceChildren();
+  items.forEach(n=>{
+    const b=el('button','chip',n);b.type='button';
+    b.setAttribute('aria-pressed',String(get()===n));
+    b.onclick=()=>{set(n);build();render()};
+    box.append(b);
+  });
+}
+function build(){
+  chips($('#cats'),['전체','원소','효과','형태'],()=>cat,n=>{cat=n;sub='전체'});
+  $('#subs').classList.toggle('on',cat==='효과');
+  chips($('#subs'),['전체','강화','회복·보호','제어','신비'],()=>sub,n=>{sub=n});
+}
+function render(){
+  const g=$('#grid');g.replaceChildren();
+  const list=D.map((r,i)=>[r,i]).filter(([r])=>(cat==='전체'||r[3]===cat)&&(sub==='전체'||r[4]===sub)&&(!q||(r[0]+r[1]+r[2]+r[5]).includes(q)));
+  $('#cnt').textContent=list.length+'개의 룬';
+  if(!list.length){g.append(el('p','empty','일치하는 룬이 없어요. 키워드나 이름으로 다시 검색해 보세요.'));return}
+  list.forEach(([r,i])=>{
+    const b=el('button','tile');b.type='button';b.dataset.c=r[3];b.dataset.g=r[4]||r[3];
+    const h=el('div','h');h.append(el('div','g',r[0]),el('div','t',r[4]||r[3]));
+    b.append(h,el('div','k',r[2]),el('div','n',r[1]),el('div','o','원래 뜻: '+r[5]));
+    b.title='눌러서 조합, 길게 눌러서 실제 뜻 보기';
+    /* 길게 누르기(0.5초) 또는 오른쪽 클릭: 정보 창. 손가락이 움직이면(스크롤) 취소 */
+    let timer=null,sx=0,sy=0,fired=false;
+    const cancel=()=>clearTimeout(timer);
+    b.addEventListener('pointerdown',e=>{if(e.button)return;fired=false;sx=e.clientX;sy=e.clientY;cancel();timer=setTimeout(()=>{fired=true;openInfo(i)},500)});
+    b.addEventListener('pointermove',e=>{if(Math.abs(e.clientX-sx)>10||Math.abs(e.clientY-sy)>10)cancel()});
+    ['pointerup','pointerleave','pointercancel'].forEach(t=>b.addEventListener(t,cancel));
+    b.addEventListener('contextmenu',e=>{e.preventDefault();cancel();if(!fired&&$('#ov').hidden)openInfo(i);fired=true});
+    b.onclick=()=>{if(fired){fired=false;return}if(T.length<5)T.push(i);tray(T.length>=5)};
+    g.append(b);
+  });
+}
+function gradeEl(n){return el('span','grade g'+n,GRADE[n])}
+function tray(full){
+  const ab=$('#ab'),rec=$('#rec');
+  $('.tray').hidden=!T.length; /* 조합 칸은 룬을 넣었을 때만 보여요 */
+  $('#tg').textContent=T.map(i=>D[i][0]).join('');
+  $('#tr').textContent=T.length?T.map(i=>KW[i]).join(' + '):(tab==='write'?'룬을 그려 조합해 보세요':'룬을 눌러 조합해 보세요');
+  $('#hint').textContent=full?'최대 5개까지 쌓을 수 있어요':(T.length?T.map(i=>D[i][1]).join(', '):'원소, 효과, 형태 순서로 고르면 돼요');
+  if(!T.length){ab.hidden=true;rec.disabled=true;rec.textContent='도감에 기록';return}
+  ab.hidden=false;ab.replaceChildren();
+  const fail=failOf(T);
+  ab.classList.toggle('fail',!!fail);
+  if(fail){
+    rec.disabled=true;rec.textContent='조합 실패';
+    const hd=el('div','abh');hd.append(el('span','abn','조합 실패'));
+    ab.append(hd,el('div','abd',fail[0]),el('div','abx w',fail[1]));
+    return;
+  }
+  const rc=codex.get(keyOf(T)),known=!!rc,opp=oppOf(T);
+  rec.disabled=false;rec.textContent=known?'설정 수정':'도감에 기록';
+  const hd=el('div','abh');hd.append(el('span','abn',(rc&&rc.name)||nameOf(T)),gradeEl(gradeOf(T)),el('span','pts','위력 '+pw(T)));
+  if(opp.length)hd.append(el('span','boom','폭주'));
+  if(!known)hd.append(el('span','new','새 조합'));
+  ab.append(hd);
+  ab.append(el('div','abd',(rc&&rc.lore)||autoLore(T)));
+  if(opp.length)ab.append(el('div','abx w',opp.map(([a,b])=>a+' ↔ '+b).join(', ')+': 반대되는 룬이 섞였어요.'));
+  notes(T).forEach(([t,w])=>ab.append(el('div',w?'abx w':'abx',t)));
+}
+function fmt(at){try{return new Date(at).toLocaleDateString('ko-KR',{year:'numeric',month:'short',day:'numeric'})}catch(e){return ''}}
+function renderCodex(){
+  $('#tcnt').textContent=codex.size?' '+codex.size:'';
+  const entries=[...codex.entries()].map(([k,v])=>{const ix=k.split(',').map(Number);return {k,at:v.at,name:v.name,lore:v.lore,ix,ok:!failOf(ix),g:gradeOf(ix),boom:oppOf(ix).length>0}}).sort((a,b)=>String(b.at).localeCompare(String(a.at)));
+  const live=entries.filter(e=>e.ok),found=live.length,total=TOTAL_VALID;
+  const p=$('#prog');p.replaceChildren();
+  const box=(label,val)=>{const d=el('div',null,label);d.prepend(el('b',null,val));return d};
+  const pct=el('div');pct.style.flex='1';pct.style.minWidth='160px';
+  pct.append(el('b',null,found.toLocaleString('ko-KR')+' / '+total.toLocaleString('ko-KR')),'발견한 조합');
+  const bar=el('div','bar'),fill=el('i');fill.style.width=(found?Math.max(found/total*100,1):0)+'%';bar.append(fill);pct.append(bar);
+  p.append(pct,box('전설 조합',String(live.filter(e=>e.g===5).length)),box('폭주 조합',String(live.filter(e=>e.boom).length)));
+  $('#store').textContent=storeMsg;
+  $('#reset').hidden=!entries.length;
+  const gc=$('#gchips');gc.replaceChildren();gc.hidden=!entries.length;
+  GRADE.slice(1).forEach((g,i)=>{
+    const n=i+1,c=entries.filter(e=>e.g===n).length;
+    const b=el('button','chip g'+n,g+' '+c);b.type='button';
+    b.setAttribute('aria-pressed',String(cg===g));
+    b.title=cg===g?'한 번 더 누르면 모두 보기':g+' 등급만 보기';
+    b.onclick=()=>{cg=cg===g?'':g;renderCodex()};
+    gc.append(b);
+  });
+  const bb=el('button','chip boomchip','폭주 '+entries.filter(e=>e.boom).length);bb.type='button';
+  bb.setAttribute('aria-pressed',String(cg==='폭주'));
+  bb.title=cg==='폭주'?'한 번 더 누르면 모두 보기':'폭주 조합만 보기';
+  bb.onclick=()=>{cg=cg==='폭주'?'':'폭주';renderCodex()};
+  gc.append(bb);
+  const L=$('#list');L.replaceChildren();
+  const vis=entries.filter(e=>(!cg||(cg==='폭주'?e.boom:GRADE[e.g]===cg))&&(!cq||(e.name+e.lore+nameOf(e.ix)+e.ix.map(i=>KW[i]+D[i][1]).join('')).includes(cq)));
+  if(!entries.length){L.append(el('p','empty','아직 기록한 조합이 없어요. 사전에서 룬을 조합하고 도감에 기록을 눌러보세요.'));return}
+  if(!vis.length){L.append(el('p','empty',cq?'일치하는 조합이 없어요.':cg==='폭주'?'폭주 조합을 아직 기록하지 않았어요. 반대 의미의 룬을 함께 넣어 보세요.':cg+' 등급으로 기록한 조합이 아직 없어요. 위력이 '+GRANGE[GRADE.indexOf(cg)]+'인 조합을 찾아보세요.'));return}
+  vis.forEach(e=>{
+    const c=el('div','entry');
+    const top=el('div');top.append(el('div','en',e.name||nameOf(e.ix)),el('div','ek',e.ix.map(i=>KW[i]).join(' + ')));
+    const badges=el('div','badges');badges.append(gradeEl(e.g),el('span','pts','위력 '+pw(e.ix)));
+    if(e.boom)badges.append(el('span','boom','폭주'));
+    const bt=el('div','eb');
+    if(e.ok){
+      bt.append(el('span',null,fmt(e.at)+' 기록'));
+      const re=el('button','tb','다시 조합');re.type='button';re.onclick=()=>{T=e.ix.slice();tray();show('dict')};
+      bt.append(re);
+    }else bt.append(el('span','old','지금 규칙으로는 만들 수 없는 옛 기록이에요'));
+    const edb=el('button','tb','수정');edb.type='button';edb.onclick=()=>openEditor(e.k);
+    const del=el('button','tb','삭제');del.type='button';del.onclick=()=>removeEntry(e.k);
+    bt.append(edb,del);
+    c.append(el('div','eg',e.ix.map(i=>D[i][0]).join('')),top,badges,el('div','ed',e.lore||autoLore(e.ix)),bt);
+    L.append(c);
+  });
+}
+/* 그린 룬 알아보기: 견본과 점구름 비교($P) 후 격자 그림 겹침으로 한 번 더 다듬어요 */
+const recognizeRune=(()=>{
+/* 룬 획 견본: 높이 100 기준 좌표, 획마다 꺾이는 점 목록 (y는 아래로) */
+function ellipse(cx,cy,rx,ry,n){const p=[];for(let k=0;k<=n;k++){const a=k/n*Math.PI*2;p.push([cx+rx*Math.cos(a),cy+ry*Math.sin(a)])}return p}
+const STROKES={
+'ᚲ':[[[44,0],[0,50],[44,100]]],
+'ᛡ':[[[50,0],[50,100]],[[22,5],[78,66]],[[78,5],[22,66]]],
+'ᚫ':[[[0,0],[0,100]],[[0,0],[30,32]],[[0,27],[30,58]]],
+'ᛠ':[[[50,0],[50,100]],[[18,0],[34,18],[50,0],[66,18],[82,0]]],
+'ᚸ':[[[0,0],[62,100]],[[62,0],[0,100]],ellipse(31,50,20,10,14)],
+'ᚪ':[[[0,0],[0,100]],[[0,0],[14,11],[24,1]],[[0,20],[14,31]]],
+'ᚢ':[[[0,100],[0,0],[14,10],[26,24],[34,43],[37,63],[37,100]]],
+'ᛞ':[[[0,0],[0,100]],[[60,0],[60,100]],[[0,0],[60,100]],[[60,0],[0,100]]],
+'ᚠ':[[[0,0],[0,100]],[[0,20],[18,2]],[[0,47],[27,16]]],
+'ᛏ':[[[50,0],[50,100]],[[30,20],[50,0],[70,20]]],
+'ᛒ':[[[0,0],[0,100]],[[0,0],[28,26],[0,51],[28,76],[0,100]]],
+'ᛜ':[[[50,0],[100,50],[50,100],[0,50],[50,0]]],
+'ᚹ':[[[0,0],[0,100]],[[0,0],[28,30],[0,58]]],
+'ᛇ':[[[50,0],[50,100]],[[50,0],[70,25]],[[50,100],[30,75]]],
+'ᛊ':[[[22,0],[0,28],[42,74],[21,100]]],
+'ᛉ':[[[50,0],[50,100]],[[50,32],[18,0]],[[50,32],[82,0]]],
+'ᛁ':[[[0,0],[0,100]]],
+'ᚾ':[[[50,0],[50,100]],[[35,34],[65,69]]],
+'ᛃ':[[[28,0],[0,34],[28,69]],[[30,28],[58,66],[30,100]]],
+'ᚷ':[[[0,0],[60,100]],[[60,0],[0,100]]],
+'ᛗ':[[[0,0],[0,100]],[[39,0],[39,100]],[[0,0],[39,46]],[[39,0],[0,46]]],
+'ᚨ':[[[0,0],[0,100]],[[0,0],[20,23]],[[0,25],[20,47]]],
+'ᛈ':[[[0,0],[0,100]],[[0,0],[16,18],[32,0]],[[0,100],[16,82],[32,100]]],
+'ᚱ':[[[0,0],[0,100]],[[0,0],[28,35],[10,58],[27,100]]],
+'ᚺ':[[[0,0],[0,100]],[[28,0],[28,100]],[[0,34],[28,71]]],
+'ᛖ':[[[0,100],[0,0],[20,25],[40,0],[40,100]]],
+'ᛟ':[[[29,0],[60,34],[0,100]],[[29,0],[0,34],[62,100]]],
+'ᚦ':[[[0,0],[0,100]],[[0,19],[26,51],[0,84]]],
+'ᛚ':[[[0,0],[0,100]],[[0,0],[20,27]]]
+};
+/* $P 점구름 인식기 (Vatavu·Anthony·Wobbrock 2012): 획 순서와 방향에 상관없이 모양만 비교 */
+const NP=48;
+const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+function pathLen(p){let d=0;for(let i=1;i<p.length;i++)if(p[i].id===p[i-1].id)d+=dist(p[i-1],p[i]);return d}
+function resample(pts,n){
+  const p=pts.map(q=>({...q})),I=pathLen(p)/(n-1);let D=0;const out=[{...p[0]}];
+  for(let i=1;i<p.length;i++){
+    if(p[i].id!==p[i-1].id)continue;
+    const d=dist(p[i-1],p[i]);
+    if(D+d>=I&&d>0){const t=(I-D)/d,q={x:p[i-1].x+t*(p[i].x-p[i-1].x),y:p[i-1].y+t*(p[i].y-p[i-1].y),id:p[i].id};out.push(q);p.splice(i,0,q);D=0}
+    else D+=d;
+  }
+  while(out.length<n)out.push({...p[p.length-1]});
+  return out.slice(0,n);
+}
+function normalize(pts){
+  let p=resample(pts,NP);
+  let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+  p.forEach(q=>{x0=Math.min(x0,q.x);y0=Math.min(y0,q.y);x1=Math.max(x1,q.x);y1=Math.max(y1,q.y)});
+  const s=Math.max(x1-x0,y1-y0)||1;
+  p=p.map(q=>({x:(q.x-x0)/s,y:(q.y-y0)/s,id:q.id}));
+  const cx=p.reduce((a,q)=>a+q.x,0)/p.length,cy=p.reduce((a,q)=>a+q.y,0)/p.length;
+  return p.map(q=>({x:q.x-cx,y:q.y-cy,id:q.id}));
+}
+function cloudDist(a,b,start){
+  const n=a.length,used=new Array(n).fill(false);let sum=0,i=start;
+  do{let m=Infinity,k=-1;for(let j=0;j<n;j++)if(!used[j]){const d=dist(a[i],b[j]);if(d<m){m=d;k=j}}used[k]=true;sum+=(1-((i-start+n)%n)/n)*m;i=(i+1)%n}while(i!==start);
+  return sum;
+}
+function match(a,b){const step=Math.floor(Math.pow(NP,0.5));let m=Infinity;for(let i=0;i<NP;i+=step)m=Math.min(m,cloudDist(a,b,i),cloudDist(b,a,i));return m}
+const strokesToPts=st=>st.flatMap((s,id)=>s.map(([x,y])=>({x,y,id})));
+const TEMPLATES=Object.entries(STROKES).map(([g,st])=>({g,pts:normalize(strokesToPts(st))}));
+/* strokes: [[[x,y],...],...] → 거리가 가까운 순서의 [{g, d}] */
+function recognize(strokes){
+  const raw=strokesToPts(strokes.filter(s=>s.length));
+  if(raw.length<2)return [];
+  const c=normalize(raw);
+  return TEMPLATES.map(t=>({g:t.g,d:match(c,t.pts)})).sort((a,b)=>a.d-b.d);
+}
+/* 2단계: 모양을 작은 격자 그림으로 그려 겹치는 정도를 비교 (짧은 가지까지 같은 무게로) */
+const GR=20;
+function raster(strokes){
+  const pts=strokes.flat();let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+  pts.forEach(([x,y])=>{x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y)});
+  const s=Math.max(x1-x0,y1-y0)||1,ox=(s-(x1-x0))/2,oy=(s-(y1-y0))/2,g=new Float32Array(GR*GR);
+  const put=(x,y)=>{const i=Math.min(GR-1,Math.max(0,Math.floor((x-x0+ox)/s*(GR-1)+.5))),j=Math.min(GR-1,Math.max(0,Math.floor((y-y0+oy)/s*(GR-1)+.5)));g[j*GR+i]=1};
+  strokes.forEach(st=>{for(let k=1;k<st.length;k++){const [a,b]=[st[k-1],st[k]],L=Math.hypot(b[0]-a[0],b[1]-a[1])/s*GR*2+1;for(let t=0;t<=L;t++)put(a[0]+(b[0]-a[0])*t/L,a[1]+(b[1]-a[1])*t/L)}if(st.length===1)put(st[0][0],st[0][1])});
+  let h=g;for(let r=0;r<2;r++){const o=new Float32Array(GR*GR);for(let j=0;j<GR;j++)for(let i=0;i<GR;i++){let v=0,c=0;for(let dj=-1;dj<=1;dj++)for(let di=-1;di<=1;di++){const a=i+di,b=j+dj;if(a>=0&&b>=0&&a<GR&&b<GR){v+=h[b*GR+a];c++}}o[j*GR+i]=v/c}h=o}
+  let n=0;h.forEach(v=>n+=v*v);n=Math.sqrt(n)||1;return h.map(v=>v/n);
+}
+const RAST=Object.fromEntries(Object.entries(STROKES).map(([g,st])=>[g,raster(st)]));
+function combined(strokes,alpha){
+  const r=recognize(strokes);if(!r.length)return r;const R=raster(strokes.filter(s=>s.length));
+  return r.map(x=>{let c=0;const T=RAST[x.g];for(let i=0;i<R.length;i++)c+=R[i]*T[i];return {g:x.g,d:x.d,c,s:x.d*(1+alpha*(1-c))}}).sort((a,b)=>a.s-b.s);
+}
+return strokes=>combined(strokes,1);
+})();
+const REJECT=2.2; /* 이보다 멀면 알아보기 어렵다고 안내 */
+function renderRules(){
+  const R=$('#rules');R.replaceChildren();
+  const card=(title,...kids)=>{const c=el('div','rule');c.append(el('h3',null,title),...kids);R.append(c)};
+  const p=t=>el('p',null,t);
+  const ul=items=>{const u=el('ul');items.forEach(t=>u.append(el('li',null,t)));return u};
+  const rk=k=>rune(k)+' '+k;
+  card('조합 순서',p('룬은 원소 → 효과 → 형태 순서로 놓아요. 같은 분류 안에서는 순서가 자유로워요. 순서가 어긋나면 조합에 실패해요.'));
+  card('룬 개수',ul(Object.entries(LIMIT).map(([c,n])=>c+' 룬은 '+n+'개까지')),p('한 번에 최대 5개까지 쌓을 수 있어서, 원소를 3개 넣으면 효과와 형태는 합쳐서 2개까지예요. 같은 룬을 두 번 넣어도 개수에 들어가요(예: 불 + 불). 개수를 넘기면 조합에 실패해요.'));
+  card('원소 없는 조합',p('효과와 형태 룬만으로도 조합할 수 있어요. 이때는 순수한 마력으로 발현돼요.'));
+  card('폭주',p('반대 의미의 룬을 함께 넣으면 조합은 되지만 폭주 능력이 돼요. 통제를 벗어나 주변과 시전자 모두에게 영향을 줄 수 있어요.'),ul(OPP.map(([a,b])=>rk(a)+' ↔ '+rk(b))));
+  card('원소 상성',ul(CLASH.map(([[a,b],t])=>rk(a)+' + '+rk(b)+': '+t)),p('상성은 능력 설명에만 나타나고 위력에는 영향을 주지 않아요.'));
+  card('위력',ul(['기본 위력: 원소 1개당 '+BASE+' (원소가 없으면 '+NOEL+')','효과 룬 1개마다 ×'+MUL_EF,'형태 룬이 있으면 ×'+MUL_FO]),p('예: 불 + 불 + 증폭 = 20 × 1.5 = 30, 물 + 치유 + 영역 = 10 × 1.5 × 2 = 30. 소수점은 반올림해서 보여줘요.'));
+  card('등급',ul(GRADE.slice(1).map((g,i)=>g+': 위력 '+GRANGE[i+1])),p('가장 높은 위력은 90이에요. 원소 3개 + 효과 1개 + 형태, 또는 원소 2개 + 효과 2개 + 형태로 만들 수 있어요.'));
+}
+/* 룬 쓰기: 그리기 판 */
+let wStrokes=[],wCur=null,wTimer=null,wLast=null,padCtx=null,padSize=0;
+const gIx=g=>D.findIndex(r=>r[0]===g);
+const WHINT='룬 하나를 그리고 잠시 기다리면 알아보고 조합에 넣어요.';
+function setupPad(){
+  const c=$('#pad'),w=($('#v-write').clientWidth||320)-80; /* 오른쪽 '다른 룬' 칸 자리를 남겨요 */
+  if(!$('#wgrid').childElementCount)['원소','효과','형태'].forEach(c=>{
+    const rows=D.filter(r=>r[3]===c),h=el('div','wcat',c+' '+rows.length),g=el('div','wgrid');h.dataset.c=c;
+    rows.forEach(r=>{const d=el('div');d.dataset.c=c;d.dataset.g=r[4]||c;d.append(el('b',null,r[0]),r[2]);g.append(d)});
+    $('#wgrid').append(h,g);
+  });
+  /* 판이 화면 아래 조합 칸에 가리지 않을 만큼만 크게 */
+  const top=c.getBoundingClientRect().top+scrollY;
+  const size=Math.round(Math.min(w,340,Math.max(200,innerHeight-top-170)));
+  if(size===padSize&&padCtx){drawPad();return}
+  padSize=size;const dpr=window.devicePixelRatio||1;
+  c.width=Math.round(size*dpr);c.height=Math.round(size*dpr);c.style.width=c.style.height=size+'px';
+  padCtx=c.getContext('2d');padCtx.setTransform(dpr,0,0,dpr,0,0);drawPad();
+}
+function drawPad(){
+  if(!padCtx)return;
+  const x=padCtx,s=padSize,cs=getComputedStyle(document.documentElement);
+  x.clearRect(0,0,s,s);
+  if(!wStrokes.length&&!wCur){x.fillStyle=cs.getPropertyValue('--mute').trim();x.font='15px "Gowun Batang", serif';x.textAlign='center';x.fillText('여기에 룬을 그려요',s/2,s/2)}
+  x.strokeStyle=cs.getPropertyValue('--rune').trim();x.lineWidth=Math.max(4,s/45);x.lineCap='round';x.lineJoin='round';
+  [...wStrokes,...(wCur?[wCur]:[])].forEach(st=>{x.beginPath();st.forEach(([px,py],k)=>k?x.lineTo(px,py):x.moveTo(px,py));if(st.length===1)x.lineTo(st[0][0]+.1,st[0][1]);x.stroke()});
+}
+function padPoint(e){const r=$('#pad').getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top]}
+function readPad(){
+  clearTimeout(wTimer);
+  const st=wStrokes.filter(s=>s.length>1);wStrokes=[];wCur=null;drawPad();
+  if(!st.length)return;
+  const r=recognizeRune(st);if(!r.length)return;
+  const idx=r.map(x=>gIx(x.g));
+  if(r[0].s>REJECT){wLast=null;renderResult(null,idx.slice(0,4),'unsure');return}
+  addFromPad(idx[0],idx.slice(1,4));
+}
+function addFromPad(i,alts){
+  if(T.length>=5){wLast=null;renderResult(i,[],'full');return}
+  T.push(i);wLast={pos:T.length-1,i};tray(T.length>=5);renderResult(i,alts,'added');
+}
+function renderResult(i,alts,mode){
+  const res=$('#wres'),row=$('#walts');
+  const msg=mode==='full'?'조합 칸이 가득 찼어요. 되돌리기나 비우기를 눌러 주세요.':mode==='unsure'?'알아보기 어려워요. 오른쪽에서 고르거나 다시 그려 보세요.':'';
+  res.replaceChildren(msg?el('p','abx w',msg):el('p','whint',WHINT));
+  row.replaceChildren();
+  if(!alts.length)return;
+  row.append(el('div','lbl',mode==='added'?'다른 룬이면':'혹시'));
+  alts.forEach(j=>{
+    const b=el('button','walt');b.type='button';b.append(el('b',null,D[j][0]),D[j][2]);
+    b.onclick=()=>{
+      if(mode==='unsure'){addFromPad(j,alts.filter(x=>x!==j));return}
+      if(!wLast||T.length-1!==wLast.pos||T[wLast.pos]!==wLast.i){res.replaceChildren(el('p','abx w','조합이 바뀌어서 바꿀 수 없어요. 다시 그려 주세요.'));return}
+      const old=wLast.i;T[wLast.pos]=j;wLast.i=j;tray(T.length>=5);renderResult(j,[old,...alts.filter(x=>x!==j)],'added');
+    };
+    row.append(b);
+  });
+}
+function show(t){
+  tab=t;
+  ['dict','write','codex','rules'].forEach(x=>{$('#t-'+x).setAttribute('aria-selected',String(t===x));$('#v-'+x).hidden=t!==x});
+  $('.tray').classList.toggle('compact',t==='write');
+  tray(T.length>=5);
+  if(t==='write')setupPad();
+  if(t==='codex')renderCodex();
+  if(t==='rules')renderRules();
+}
+/* 저장: 도감 기록은 이 기기의 브라우저(localStorage)에 보관 */
+/* 기록 하나: {at: 처음 기록한 시각, name: 직접 정한 이름, lore: 직접 정한 능력 설정}. 빈 값이면 기본 이름·설명을 따라가요 */
+const norm=v=>typeof v==='string'?{at:v,name:'',lore:''}:{at:(v&&v.at)||'',name:(v&&v.name)||'',lore:(v&&v.lore)||''};
+function loadLocal(){try{const o=JSON.parse(localStorage.getItem('rune-codex')||'{}');codex=new Map(Object.entries(o).map(([k,v])=>[k,norm(v)]))}catch(e){codex=new Map()}}
+function saveLocal(){try{localStorage.setItem('rune-codex',JSON.stringify(Object.fromEntries(codex)))}catch(e){}}
+async function saveEntry(k,name,lore){
+  const prev=codex.get(k),rec={at:prev&&prev.at?prev.at:new Date().toISOString(),name,lore};
+  if(store){try{await store.doc('c'+k.replace(/,/g,'_')).set({k,...rec})}catch(e){return false}}
+  codex.set(k,rec);if(!store)saveLocal();tray();renderCodex();return true;
+}
+function autoLore(ix){return describe(ix)+(oppOf(ix).length?' '+BOOM:'')}
+let edKey=null,edBack=null;
+function openEditor(k){
+  const ix=k.split(',').map(Number),rc=codex.get(k);
+  edKey=k;edBack=document.activeElement;
+  $('#ed-g').textContent=ix.map(i=>D[i][0]).join('');
+  $('#ed-t').textContent=rc?'능력 설정 수정':'새 능력 기록';
+  $('#ed-s').textContent=ix.map(i=>KW[i]).join(' + ')+' · '+GRADE[gradeOf(ix)]+' · 위력 '+pw(ix)+(oppOf(ix).length?' · 폭주':'');
+  $('#ed-name').value=(rc&&rc.name)||nameOf(ix);$('#ed-name').placeholder=nameOf(ix);
+  $('#ed-lore').value=(rc&&rc.lore)||autoLore(ix);$('#ed-lore').placeholder=autoLore(ix);
+  $('#ed-save').textContent=rc?'수정 저장':'도감에 기록';
+  $('#ed-msg').textContent='';
+  $('#eo').hidden=false;$('#ed-name').focus();
+}
+function closeEditor(){$('#eo').hidden=true;edKey=null;if(edBack&&edBack.focus)edBack.focus()}
+async function saveEditor(){
+  if(!edKey)return;
+  const ix=edKey.split(',').map(Number),btn=$('#ed-save');
+  let name=$('#ed-name').value.trim(),lore=$('#ed-lore').value.trim();
+  if(name===nameOf(ix))name='';
+  if(lore===autoLore(ix))lore='';
+  btn.disabled=true;
+  const ok=await saveEntry(edKey,name,lore);
+  btn.disabled=false;
+  if(ok)closeEditor();else $('#ed-msg').textContent='저장하지 못했어요. 잠시 후 다시 눌러주세요.';
+}
+async function removeEntry(k){
+  if(store){try{await store.doc('c'+k.replace(/,/g,'_')).delete()}catch(e){storeMsg='삭제하지 못했어요. 잠시 후 다시 시도해 주세요.';renderCodex();return}}
+  codex.delete(k);if(!store)saveLocal();tray();renderCodex();
+}
+let armTimer=null,resetting=false;
+function disarm(){clearTimeout(armTimer);const b=$('#reset');b.classList.remove('armed');b.textContent='기록 초기화'}
+async function resetAll(){
+  const b=$('#reset');
+  if(resetting)return;
+  if(!b.classList.contains('armed')){b.classList.add('armed');b.textContent='모든 기록이 지워져요. 한 번 더 누르면 초기화'; armTimer=setTimeout(disarm,4000);return}
+  disarm();resetting=true;b.disabled=true;b.textContent='초기화하는 중…';
+  const keys=[...codex.keys()];let failed=0;
+  if(store){for(const k of keys){try{await store.doc('c'+k.replace(/,/g,'_')).delete();codex.delete(k)}catch(e){failed++}}}
+  else{codex.clear();saveLocal()}
+  resetting=false;b.disabled=false;b.textContent='기록 초기화';
+  if(failed)storeMsg=failed+'개를 지우지 못했어요. 다시 눌러 남은 기록을 초기화하세요.';
+  tray();renderCodex();
+}
+loadLocal();storeMsg='기록은 이 기기의 브라우저에 저장돼요. 다른 기기에서는 따로 모여요.';
+$('#q').addEventListener('input',e=>{q=e.target.value.trim();render()});
+$('#cq').addEventListener('input',e=>{cq=e.target.value.trim();renderCodex()});
+$('#t-dict').onclick=()=>show('dict');
+$('#t-codex').onclick=()=>show('codex');
+$('#t-rules').onclick=()=>show('rules');
+$('#t-write').onclick=()=>show('write');
+{
+  const pad=$('#pad');
+  pad.addEventListener('pointerdown',e=>{e.preventDefault();clearTimeout(wTimer);try{pad.setPointerCapture(e.pointerId)}catch(_){}wCur=[padPoint(e)];drawPad()});
+  pad.addEventListener('pointermove',e=>{if(!wCur)return;const p=padPoint(e),l=wCur[wCur.length-1];if(Math.hypot(p[0]-l[0],p[1]-l[1])>=2){wCur.push(p);drawPad()}});
+  const endStroke=()=>{if(!wCur)return;wStrokes.push(wCur);wCur=null;drawPad();clearTimeout(wTimer);wTimer=setTimeout(readPad,900)};
+  pad.addEventListener('pointerup',endStroke);pad.addEventListener('pointercancel',endStroke);
+  $('#wclear').onclick=()=>{clearTimeout(wTimer);wStrokes=[];wCur=null;drawPad()};
+  $('#wgo').onclick=readPad;
+  window.addEventListener('resize',()=>{if(tab==='write')setupPad()});
+}
+$('#rec').onclick=()=>{if(T.length&&!$('#rec').disabled&&!failOf(T))openEditor(keyOf(T))};
+$('#ed-save').onclick=saveEditor;
+$('#ed-cancel').onclick=closeEditor;
+$('#ed-reset').onclick=()=>{if(!edKey)return;const ix=edKey.split(',').map(Number);$('#ed-name').value=nameOf(ix);$('#ed-lore').value=autoLore(ix)};
+$('#reset').onclick=resetAll;
+$('#pclose').onclick=closeInfo;
+$('#padd').onclick=()=>{const i=infoIx;closeInfo();if(i!=null&&T.length<5){T.push(i);tray(T.length>=5)}};
+$('#ov').addEventListener('click',e=>{if(e.target.id==='ov')closeInfo()});
+document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(!$('#eo').hidden)closeEditor();else if(!$('#ov').hidden)closeInfo()});
+$('#undo').onclick=()=>{T.pop();tray()};
+$('#clr').onclick=()=>{T=[];tray()};
+build();render();tray();renderCodex();
+// 앱으로 설치해 열었을 때는 대결도 같은 창에서 열어요
+try{if(matchMedia('(display-mode: standalone)').matches||navigator.standalone)$('#playbtn').removeAttribute('target')}catch(e){}
+if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
