@@ -105,6 +105,81 @@ button:focus-visible,input:focus-visible,canvas:focus-visible{outline:2px solid 
 .ov{position:fixed;inset:0;background:rgba(10,14,22,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10}
 .ov .panel{max-width:440px;width:100%}
 @media (prefers-reduced-motion:reduce){.hp i{transition:none}}
+/* 결과 창: 이긴 쪽은 승리, 진 쪽은 패배, 같으면 무승부 모션. 이미지처럼 언제나 어두운 바탕 */
+.ov.res-ov{background:rgba(8,11,18,.82)}
+.res{position:relative;overflow:hidden auto;max-height:100%;width:100%;max-width:440px;box-sizing:border-box;border-radius:18px;border:1px solid #2c3650;padding:26px 20px 22px;text-align:center;color:#e6e9f0;display:flex;flex-direction:column;align-items:center;gap:12px;--em:min(240px,60vw,34vh);--after:1.9s}
+.res.win{background:#141a26;--after:1.6s}.res.lose{background:#0f131b;--after:2.3s}.res.draw{background:#121722;--after:2s}
+.res-glow{position:absolute;inset:0;pointer-events:none}
+.res.win .res-glow{background:radial-gradient(circle at 50% 30%,rgba(224,176,88,.22) 0,rgba(224,176,88,.06) 34%,rgba(20,26,38,0) 62%)}
+.res.lose .res-glow{background:radial-gradient(circle at 50% 30%,rgba(134,168,242,.09) 0,rgba(15,19,27,0) 58%)}
+.res.draw .res-glow{background:radial-gradient(circle at 50% 30%,rgba(201,196,170,.11) 0,rgba(18,23,34,0) 58%)}
+.res>:not(.res-glow){position:relative}
+.res-art{display:flex;flex-direction:column;align-items:center;gap:12px}
+.res-em{position:relative;width:var(--em);height:var(--em)}
+.res-em svg{position:absolute;left:0;top:0;width:100%;height:100%}
+.res-g{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.res-g span,.res-half span{display:block;font-family:var(--f-rune);font-size:calc(var(--em)*.4);line-height:1}
+.res-burst{position:absolute;left:13.3%;top:13.3%;width:73.4%;height:73.4%;box-sizing:border-box;border:2px solid #e0b058;border-radius:50%;opacity:0}
+.res-half{position:absolute;top:0;width:50%;height:100%;overflow:hidden}
+.res-half>div{width:200%;height:100%;display:flex;align-items:center;justify-content:center}
+.res-half.r{left:50%}.res-half.r>div{margin-left:-100%}
+.res-title{margin:0;font-family:var(--f-title);font-weight:700;font-size:clamp(52px,15vw,80px);line-height:1;letter-spacing:.18em;margin-right:-.18em}
+.res.draw .res-title{letter-spacing:.12em;margin-right:-.12em}
+.res-bar{display:flex}.res-bar i{display:block;width:32px;height:3px}
+.res-rune{margin:0;font-size:14px;color:#9aa4b8}
+.res-rune b{font-family:var(--f-rune);font-weight:400;letter-spacing:.14em}
+.res-score{margin:4px 0 0;font-size:15px;color:#c9cfdb}
+.res .row{justify-content:center}
+.res .btn{background:transparent;color:#e6e9f0;border-color:#3e4862}
+.res .btn.main{background:#e0b058;color:#141a26;border-color:#e0b058}
+.res .note{margin:0;color:#9aa4b8}
+@keyframes rFade{from{opacity:0}to{opacity:1}}
+@keyframes rUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes rVRing{from{opacity:0;transform:rotate(-70deg) scale(.82)}to{opacity:1;transform:none}}
+@keyframes rSpin{to{transform:rotate(360deg)}}
+@keyframes rBurst{0%{opacity:0;transform:scale(.45)}25%{opacity:.9}100%{opacity:0;transform:scale(1.7)}}
+@keyframes rVGlyph{0%{opacity:0;transform:scale(.3)}60%{opacity:1;transform:scale(1.14)}100%{opacity:1;transform:scale(1)}}
+@keyframes rVGlow{0%,100%{text-shadow:0 0 22px rgba(224,176,88,.5)}50%{text-shadow:0 0 44px rgba(224,176,88,.95)}}
+@keyframes rVRise{from{opacity:0;transform:translateY(22px);letter-spacing:.45em;margin-right:-.45em}to{opacity:1;transform:none;letter-spacing:.18em;margin-right:-.18em}}
+@keyframes rDRing{from{opacity:0;transform:scale(1.08)}to{opacity:1;transform:none}}
+@keyframes rDGlyph{0%{opacity:0;transform:translate(0,-46px) rotate(0deg)}50%{opacity:1;transform:translate(0,10px) rotate(0deg)}62%{transform:translate(4px,8px) rotate(-10deg)}78%{transform:translate(4px,8px) rotate(-3deg)}100%{opacity:1;transform:translate(4px,8px) rotate(-6deg)}}
+@keyframes rCrack{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+@keyframes rShake{0%,100%{transform:none}20%{transform:translateX(-6px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(2px)}}
+@keyframes rDrop{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:none}}
+@keyframes rBarX{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes rLs{from{opacity:0;transform:translateX(-46px)}to{opacity:1;transform:none}}
+@keyframes rRs{from{opacity:0;transform:translateX(46px)}to{opacity:1;transform:none}}
+@keyframes rL{from{opacity:0;transform:translateX(-15%)}to{opacity:1;transform:none}}
+@keyframes rR{from{opacity:0;transform:translateX(15%)}to{opacity:1;transform:none}}
+@keyframes rLine{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+@keyframes rPop{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
+.r-bg{animation:rFade 1.2s ease-out both}
+.r-vring{animation:rVRing 1.1s cubic-bezier(.2,.8,.2,1) both}
+.r-vspin{transform-origin:150px 150px;animation:rSpin 90s linear 1.1s infinite}
+.r-vburst{animation:rBurst 1s ease-out .55s both}
+.r-vglyph{animation:rVGlyph .8s cubic-bezier(.3,1.4,.5,1) .35s both,rVGlow 2.6s ease-in-out 1.3s infinite}
+.r-vtitle{animation:rVRise .9s cubic-bezier(.2,.8,.2,1) .75s both}
+.r-vsub{animation:rUp .6s ease-out 1.3s both}
+.r-dring{animation:rDRing .8s ease-out both}
+.r-dglyph{animation:rDGlyph 1.1s ease-in .2s both}
+.r-dshake{animation:rShake .45s ease-out 1.05s both}
+.r-c1{stroke-dasharray:1;animation:rCrack .45s ease-out 1.05s both}
+.r-c2{stroke-dasharray:1;animation:rCrack .3s ease-out 1.4s both}
+.r-c3{stroke-dasharray:1;animation:rCrack .3s ease-out 1.5s both}
+.r-dtitle{animation:rDrop .8s ease-out 1.5s both}
+.r-dbar{transform-origin:center;animation:rBarX .5s ease-out 1.9s both}
+.r-dsub{animation:rFade .6s ease-out 2.1s both}
+.r-tl{animation:rLs 1s cubic-bezier(.2,.8,.2,1) .1s both}
+.r-tr{animation:rRs 1s cubic-bezier(.2,.8,.2,1) .1s both}
+.r-tgl{animation:rL .9s cubic-bezier(.2,.8,.2,1) .35s both}
+.r-tgr{animation:rR .9s cubic-bezier(.2,.8,.2,1) .35s both}
+.r-tline{transform-origin:150px 150px;animation:rLine .5s ease-out 1.05s both}
+.r-ttitle{animation:rPop .8s ease-out 1.2s both}
+.r-tbl{transform-origin:right center;animation:rBarX .45s ease-out 1.6s both}
+.r-tbr{transform-origin:left center;animation:rBarX .45s ease-out 1.6s both}
+.r-tsub{animation:rFade .6s ease-out 1.8s both}
+.r-after{animation:rUp .5s ease-out var(--after) both}
+@media (prefers-reduced-motion:reduce){.res *{animation:none!important}}
 </style>
 </head>
 <body>
@@ -165,11 +240,12 @@ button:focus-visible,input:focus-visible,canvas:focus-visible{outline:2px solid 
     </div>
   </section>
 
-  <div class="ov" id="over" hidden><div class="panel over stack">
-    <div class="big" id="over-title"></div>
-    <p id="over-sub"></p>
-    <div class="row" style="justify-content:center"><button class="btn main" id="b-again" type="button">다시 하기</button><button class="btn" id="b-lobby" type="button">처음으로</button></div>
-    <p class="note" id="over-note"></p>
+  <div class="ov res-ov" id="over" hidden><div class="res" id="res" role="dialog" aria-modal="true" aria-labelledby="over-title">
+    <div class="res-glow r-bg"></div>
+    <div class="res-art" id="res-art"></div>
+    <p class="res-score r-after" id="over-sub"></p>
+    <div class="row r-after"><button class="btn main" id="b-again" type="button">다시 하기</button><button class="btn" id="b-lobby" type="button">처음으로</button></div>
+    <p class="note r-after" id="over-note"></p>
   </div></div>
 </div>
 
@@ -627,11 +703,78 @@ function submit(c){
 }
 function enterRound(){A.sel=[];A.confirmed=false;A.aiPick=null;A.shownRound=A.S.round;
   if(A.kind==='ai'&&A.S.P.h.foresight&&!A.S.over)A.aiPick=aiChoose(A.S.P.g,A.S.P.h,A.S.field,null);}
+/* ───── 결과 모션 (승리·패배·무승부) ───── */
+const RES_RUNEF="'Noto Sans Runic','Segoe UI Historic','Segoe UI Symbol',sans-serif";
+const RES_FUTHARK='ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃᛇᛈᛉᛊᛏᛒᛖᛗᛚᛜᛞᛟ';
+const resTicks=(idx,color)=>`<g stroke="${color}" stroke-width="1.6" stroke-linecap="round">`+idx.map(i=>{const a=(i*15-90)*Math.PI/180,r1=i%2?136:130,f=v=>v.toFixed(1);return `<line x1="${f(150+r1*Math.cos(a))}" y1="${f(150+r1*Math.sin(a))}" x2="${f(150+142*Math.cos(a))}" y2="${f(150+142*Math.sin(a))}"/>`}).join('')+'</g>';
+const RES_ALL=[...Array(24).keys()];
+const RES_ART={
+  win:()=>`<div class="res-em">
+    <svg class="r-vring" viewBox="0 0 300 300" aria-hidden="true">
+      <defs><path id="resRingV" d="M 46,150 a 104,104 0 1,1 208,0 a 104,104 0 1,1 -208,0" fill="none"/></defs>
+      ${resTicks(RES_ALL,'#e0b058')}
+      <circle cx="150" cy="150" r="142" fill="none" stroke="#e0b058" stroke-width="1.2"/>
+      <circle cx="150" cy="150" r="92" fill="none" stroke="#e0b058" stroke-width="0.8" opacity="0.7"/>
+      <g class="r-vspin"><text font-family="${RES_RUNEF}" font-size="17" fill="#e0b058" opacity="0.85"><textPath href="#resRingV" textLength="640" lengthAdjust="spacing">${RES_FUTHARK}</textPath></text></g>
+    </svg>
+    <div class="res-burst r-vburst"></div>
+    <div class="res-g"><span class="r-vglyph" style="color:#f6dc9c;text-shadow:0 0 28px rgba(224,176,88,.65)">ᛏ</span></div>
+  </div>
+  <h2 class="res-title r-vtitle" id="over-title" style="color:#f3d38f;text-shadow:0 2px 0 rgba(0,0,0,.35)">승리</h2>
+  <p class="res-rune r-vsub"><b style="color:#e0b058">ᛊᛁᚷᚱ</b> · 고대 노르드어 sigr, 승리</p>`,
+  lose:()=>`<div class="res-em r-dshake">
+    <svg class="r-dring" viewBox="0 0 300 300" aria-hidden="true">
+      <defs><path id="resRingD" d="M 46,150 a 104,104 0 1,1 208,0 a 104,104 0 1,1 -208,0" fill="none"/></defs>
+      ${resTicks(RES_ALL.filter(i=>![3,4,10,17,18].includes(i)),'#3e4862')}
+      <circle cx="150" cy="150" r="142" fill="none" stroke="#3e4862" stroke-width="1.2" stroke-dasharray="70 9 34 22 120 7 46 30 90 12 60 18 140 9"/>
+      <circle cx="150" cy="150" r="92" fill="none" stroke="#3e4862" stroke-width="0.8" stroke-dasharray="48 10 80 16 30 8 120 14 70 12"/>
+      <text font-family="${RES_RUNEF}" font-size="17" fill="#5b6680"><textPath href="#resRingD" textLength="640" lengthAdjust="spacing">ᚠᚢᚦᚨᚱ ᚷᚹᚺᚾᛁᛃ  ᛈᛉᛊᛏ ᛖᛗᛚ ᛞᛟ</textPath></text>
+      <g fill="none" stroke="#f07a82" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" opacity="0.85">
+        <polyline class="r-c1" pathLength="1" points="232,22 205,70 214,96 176,132 158,150 166,171 128,206 136,236 98,282"/>
+        <polyline class="r-c2" pathLength="1" points="176,132 204,150 226,146"/>
+        <polyline class="r-c3" pathLength="1" points="128,206 104,204 88,220"/>
+      </g>
+    </svg>
+    <div class="res-g"><span class="r-dglyph" style="color:#8a93a6;transform:translate(4px,8px) rotate(-6deg)">ᚺ</span></div>
+  </div>
+  <h2 class="res-title r-dtitle" id="over-title" style="color:#b9c0cd">패배</h2>
+  <div class="res-bar r-dbar"><i style="width:72px;border-radius:2px;background:#f07a82;opacity:.85"></i></div>
+  <p class="res-rune r-dsub"><b style="color:#b9c0cd">ᛟᛊᛁᚷᚱ</b> · 고대 노르드어 ósigr, 패배</p>`,
+  draw:()=>`<div class="res-em">
+    <svg viewBox="0 0 300 300" aria-hidden="true">
+      <defs>
+        <path id="resRingL" d="M 150,254 A 104,104 0 0,1 150,46" fill="none"/>
+        <path id="resRingR" d="M 150,46 A 104,104 0 0,1 150,254" fill="none"/>
+      </defs>
+      <g class="r-tl">
+        ${resTicks([13,14,15,16,17,18,19,20,21,22,23],'#e0b058')}
+        <path d="M 150,292 A 142,142 0 0,1 150,8" fill="none" stroke="#e0b058" stroke-width="1.2"/>
+        <path d="M 150,242 A 92,92 0 0,1 150,58" fill="none" stroke="#e0b058" stroke-width="0.8" opacity="0.7"/>
+        <text font-family="${RES_RUNEF}" font-size="17" fill="#e0b058" opacity="0.85"><textPath href="#resRingL" textLength="300" lengthAdjust="spacing">ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃ</textPath></text>
+      </g>
+      <g class="r-tr">
+        ${resTicks([1,2,3,4,5,6,7,8,9,10,11],'#56617c')}
+        <path d="M 150,8 A 142,142 0 0,1 150,292" fill="none" stroke="#56617c" stroke-width="1.2"/>
+        <path d="M 150,58 A 92,92 0 0,1 150,242" fill="none" stroke="#56617c" stroke-width="0.8"/>
+        <text font-family="${RES_RUNEF}" font-size="17" fill="#7a849c"><textPath href="#resRingR" textLength="300" lengthAdjust="spacing">ᛇᛈᛉᛊᛏᛒᛖᛗᛚᛜᛞᛟ</textPath></text>
+      </g>
+      <line class="r-tline" x1="150" y1="0" x2="150" y2="300" stroke="#3e4862" stroke-width="1" stroke-dasharray="3 5"/>
+    </svg>
+    <div class="res-half"><div class="r-tgl"><span style="color:#f6dc9c">ᛞ</span></div></div>
+    <div class="res-half r"><div class="r-tgr"><span style="color:#9aa4b8">ᛞ</span></div></div>
+  </div>
+  <h2 class="res-title r-ttitle" id="over-title" style="color:#d7dbe3">무승부</h2>
+  <div class="res-bar"><i class="r-tbl" style="background:#e0b058"></i><i class="r-tbr" style="background:#56617c"></i></div>
+  <p class="res-rune r-tsub"><b style="color:#d7dbe3">ᛃᚨᚠᚾ</b> · 고대 노르드어 jafn, 대등</p>`
+};
 function showOver(){
   const o=A.S.over,me=A.seat;if(!o){$('#over').hidden=true;return}
   const win=o.winner===me,draw_=o.winner==='draw';
-  $('#over-title').textContent=draw_?'무승부':win?'승리':'패배';
   const P=A.S.P,op=me==='h'?'g':'h';
+  /* 결과마다 한 번만 그려요. 같은 결과로 다시 불려도 모션이 처음부터 다시 돌지 않게 */
+  const kind=draw_?'draw':win?'win':'lose',key=[A.kind,A.code||'',me,A.S.round,o.winner,o.reason,P.h.hp,P.g.hp].join('|');
+  if($('#over').hidden||A.resKey!==key){A.resKey=key;$('#res').className='res '+kind;$('#res-art').innerHTML=RES_ART[kind]();
+    for(const el of document.querySelectorAll('#res .r-after,#res .r-bg')){el.style.animation='none';void el.offsetWidth;el.style.animation=''}}
   $('#over-sub').textContent=(o.reason==='time'?'10라운드가 끝나 체력으로 판정했어요. ':o.reason==='double'?'둘 다 쓰러져서 덜 깎인 쪽을 가렸어요. ':'')+(o.reason==='double'?`나 ${P[me].hp} : ${P[op].hp} 상대`:`나 ${Math.max(0,P[me].hp)} : ${Math.max(0,P[op].hp)} 상대`);
   const again=$('#b-again');
   if(A.kind==='net'&&A.seat!=='h'){again.hidden=true;$('#over-note').textContent='방장이 다시 하기를 누르면 새 판이 시작돼요.'}
