@@ -298,7 +298,7 @@ const booms=c=>{const k=kw(c);return OPP.filter(p=>k.includes(p[0])&&k.includes(
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 const BAG=[...[0,1,2,3,4,5].flatMap(i=>[i,i,i]),...Array.from({length:23},(_,k)=>k+6)];
 function newPlayer(){return {hp:HPMAX,bag:shuffle(BAG),hand:[],disc:[],limit:5,lastGuard:false,lastBind:false,stops:0,reviveUsed:false,reviveReady:false,bonus:1,charge:0,extra:0,spirit:null,foresight:false}}
-/* 쉬기 = 기 모으기: 쉰 횟수만큼(최대 2번) 다음에 룬을 낼 때 위력 ×1.5, ×2 */
+/* 쉬기 = 재정비: 쉰 횟수만큼(최대 2번) 다음에 룬을 낼 때 위력 ×1.5, ×2 */
 const chargeMult=p=>1+CHARGE_STEP*Math.min(CHARGE_MAX,p.charge||0);
 const effBonus=p=>(p.bonus||1)*chargeMult(p);
 /* 손패는 7개, 쉰 다음 라운드는 1개 더(8개) */
@@ -357,7 +357,7 @@ function resolve(S0,sub){
   }
   let stopped=false;
   for(const s of SEATS)if(has(C[s],'정지')){P[s].stops++;if(blocked(s))E.push(`@${O[s]}의 정화가 @${s}의 정지를 막았어요`);else stopped=true}
-  for(const s of SEATS)if(C0[s].length&&(P[s].charge||0)>0)E.push(`@${s}의 모은 기: 위력 ×${chargeMult(P[s])}`);
+  for(const s of SEATS)if(C0[s].length&&(P[s].charge||0)>0)E.push(`@${s}의 재정비: 위력 ×${chargeMult(P[s])}`);
   const pw={h:power(C.h,effBonus(P.h)),g:power(C.g,effBonus(P.g))};
   const dealt={h:0,g:0},heal={h:0,g:0},selfd={h:0,g:0},refl={h:0,g:0},oath={h:false,g:false};
   if(stopped){
@@ -409,7 +409,7 @@ function resolve(S0,sub){
     if(has(c,'계약')){p.hp-=10;p.bonus*=2;E.push(`@${s}의 계약: 체력 10을 내고 다음 라운드 위력 ×2`)}
     if(oath[s]){p.bonus*=2;E.push(`@${s}의 맹세: 다음 라운드 위력 ×2`)}
     if(has(c,'속박')){if(blocked(s))E.push(`@${O[s]}의 정화가 @${s}의 속박을 막았어요`);else{nextLimit[O[s]]=1;E.push(`@${s}의 속박: 다음 라운드 @${O[s]}는 룬 1개만`)}}
-    if(!C0[s].length){const was=p.charge||0;p.charge=Math.min(CHARGE_MAX,was+1);p.extra=1;E.push(was>=CHARGE_MAX?`@${s}는 쉬었어요. 기는 이미 가득 찼어요 (다음 위력 ×${chargeMult(p)}, 손패 8개)`:`@${s}는 쉬면서 기를 모았어요 (다음 위력 ×${chargeMult(p)}, 손패 8개)`)}
+    if(!C0[s].length){const was=p.charge||0;p.charge=Math.min(CHARGE_MAX,was+1);p.extra=1;E.push(was>=CHARGE_MAX?`@${s}는 쉬었어요. 재정비는 이미 최대예요 (다음 위력 ×${chargeMult(p)}, 손패 8개)`:`@${s}는 쉬면서 재정비했어요 (다음 위력 ×${chargeMult(p)}, 손패 8개)`)}
     else{p.charge=0;p.extra=0}
     p.lastGuard=has(c,'수호');p.lastBind=has(c,'속박');
     if(has(c,'부활')){p.reviveReady=true;E.push(`@${s}의 부활이 대기 중이에요`)}
@@ -466,7 +466,7 @@ function aiChoose(me,op,field,known){
     for(let j=start;j<h.length;j++){if(j>start&&h[j]===h[j-1])continue;rec(j+1,[...cur,j])}
   };
   rec(0,[]);
-  /* 손패가 약하면 쉬면서 기를 모아요 (체력이 넉넉하고 아직 덜 모았을 때) */
+  /* 손패가 약하면 쉬면서 재정비해요 (체력이 넉넉하고 재정비가 아직 최대가 아닐 때) */
   if((me.charge||0)<CHARGE_MAX&&me.hp>35&&bv<AI_PASS_T[me.charge||0])return [];
   return best;
 }
@@ -582,7 +582,7 @@ function statusChips(p,isMe){
   if(p.reviveReady)add('부활 대기',1);
   if(p.limit===1)add('속박: 이번 라운드 룬 1개',1);
   if(p.bonus>1)add(`다음 공격 위력 ×${p.bonus}`,1);
-  if((p.charge||0)>0)add(`기 모음 ×${chargeMult(p)}`,1);
+  if((p.charge||0)>0)add(`재정비 ×${chargeMult(p)}`,1);
   if(p.spirit)add(`${p.spirit.anc?'고대 정령':'정령'} ${p.spirit.turns}라운드 · ${p.spirit.dmg} 피해`,1);
   if(p.foresight)add('예언',1);
   if(p.lastGuard)add('수호 쉬는 중');
@@ -618,11 +618,11 @@ function renderCombo(){
   const S=A.S,p=S.P[A.seat],c=curCombo(),box=$('#combo');box.replaceChildren();
   box.append(el('div','combo-g',c.map(i=>D[i][0]).join('')));
   if(!c.length){box.append(el('div','combo-m','손패에서 룬을 눌러 조합하세요. 원소 → 효과 → 형태 순서예요. 남은 룬은 라운드가 끝나면 버려져요.'));
-    const ch=p.charge||0;box.append(el('div','combo-m',ch>=CHARGE_MAX?`기가 가득 찼어요. 이번에 룬을 내면 위력 ×${chargeMult(p)}예요.`:ch>0?`모은 기 ×${chargeMult(p)}: 이번에 룬을 내면 위력에 더해져요. 한 번 더 쉬면 ×${1+CHARGE_STEP*(ch+1)}가 돼요.`:`쉬면 기를 모아 다음에 룬을 낼 때 위력이 ×${1+CHARGE_STEP}가 되고, 다음 손패를 8개 받아요. 기는 두 번까지 모을 수 있어요.`));}
+    const ch=p.charge||0;box.append(el('div','combo-m',ch>=CHARGE_MAX?`재정비가 최대예요. 이번에 룬을 내면 위력 ×${chargeMult(p)}예요.`:ch>0?`재정비 ×${chargeMult(p)}: 이번에 룬을 내면 위력에 더해져요. 한 번 더 쉬면 ×${1+CHARGE_STEP*(ch+1)}가 돼요.`:`쉬면 재정비해서 다음에 룬을 낼 때 위력이 ×${1+CHARGE_STEP}가 되고, 다음 손패를 8개 받아요. 재정비는 두 번까지 쌓여요.`));}
   else{
     const err=comboError(c,p),pw=power(c,effBonus(p)),act=actionOf(c);
     box.append(el('div','combo-n',nameOf(c)));
-    let m=`${act} · 위력 ${R(pw)}${(p.charge||0)>0?` (모은 기 ×${chargeMult(p)} 포함)`:''}`;
+    let m=`${act} · 위력 ${R(pw)}${(p.charge||0)>0?` (재정비 ×${chargeMult(p)} 포함)`:''}`;
     if(act==='공격'){let d=pw/DIV;if(A.S.field&&els(c).includes(A.S.field.el))d*=1.3;if(has(c,'부활'))d*=0.5;m+=` · 예상 피해 ${R(d)}${has(c,'환영')?` + ${R(d/2)}`:''} (상성 전)`}
     if(has(c,'치유'))m+=` · 회복 ${R(pw/HEALDIV*(els(c).includes('나무')?1.5:1))}`;
     if(has(c,'방어'))m+=` · 막기 ${R(pw/2)}`;
