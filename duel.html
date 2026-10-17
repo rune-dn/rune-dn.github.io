@@ -285,7 +285,7 @@ function nameOf(ix){
 }
 
 /* ───── 규칙 엔진 (규칙서 최종본) ───── */
-const HPMAX=100,DIV=3,HEALDIV=1.75,REVIVE_HP=20,PURE_HEAL=5,SPIRIT_DIV=12,HAND=7,REST_HEAL=15,ROUND_MS=60000;
+const HPMAX=100,DIV=3,HEALDIV=1.75,REVIVE_HP=20,PURE_HEAL=5,SPIRIT_DIV=12,HAND=7,REST_HEAL=10,ROUND_MS=60000;
 const BEATS={물:'불',불:'나무',나무:'땅',땅:'바람',바람:'번개',번개:'물'};
 const OPP=[['치유','재앙'],['수호','재앙'],['정지','이동'],['성장','정지'],['각성','속박'],['원초적 힘','정신'],['치유','흡수'],['맹세','변환']];
 const RK={원소:0,효과:1,형태:2};
@@ -298,7 +298,7 @@ const booms=c=>{const k=kw(c);return OPP.filter(p=>k.includes(p[0])&&k.includes(
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 const BAG=[...[0,1,2,3,4,5].flatMap(i=>[i,i,i]),...Array.from({length:23},(_,k)=>k+6)];
 function newPlayer(){return {hp:HPMAX,bag:shuffle(BAG),hand:[],disc:[],limit:5,lastGuard:false,lastBind:false,stops:0,reviveUsed:false,reviveReady:false,bonus:1,extra:0,spirit:null,foresight:false}}
-/* 재정비(룬을 내지 않기): 이번 라운드 체력 15 회복, 다음 라운드 손패 8개 */
+/* 재정비(룬을 내지 않기): 이번 라운드 체력 10 회복, 다음 라운드 손패 8개 */
 /* 손패는 7개, 재정비한 다음 라운드는 1개 더(8개) */
 function draw(p){const n=HAND+(p.extra||0);while(p.hand.length<n){if(!p.bag.length){p.bag=shuffle(p.disc);p.disc=[]}if(!p.bag.length)break;p.hand.push(p.bag.pop())}p.hand.sort((a,b)=>a-b)}
 function newGame(){const S={round:1,field:null,last:null,over:null,P:{h:newPlayer(),g:newPlayer()}};draw(S.P.h);draw(S.P.g);return S}
@@ -466,7 +466,7 @@ function aiChoose(me,op,field,known){
     for(let j=start;j<h.length;j++){if(j>start&&h[j]===h[j-1])continue;rec(j+1,[...cur,j])}
   };
   rec(0,[]);
-  /* 재정비(체력 15 회복 + 다음 손패 8개)가 낼 수 있는 조합보다 나으면 재정비해요 */
+  /* 재정비(체력 10 회복 + 다음 손패 8개)가 낼 수 있는 조합보다 나으면 재정비해요 */
   const restV=Math.min(REST_HEAL,HPMAX-me.hp)*(me.hp<50?1.4:0.5)+2+Math.random()*4;
   if(restV>bv)return [];
   return best;
@@ -618,7 +618,7 @@ function renderCombo(){
   const S=A.S,p=S.P[A.seat],c=curCombo(),box=$('#combo');box.replaceChildren();
   box.append(el('div','combo-g',c.map(i=>D[i][0]).join('')));
   if(!c.length){box.append(el('div','combo-m','손패에서 룬을 눌러 조합하세요. 원소 → 효과 → 형태 순서예요. 남은 룬은 라운드가 끝나면 버려져요.'));
-    box.append(el('div','combo-m',`재정비하면 이번 라운드에 체력 ${REST_HEAL}를 회복하고 다음 라운드에 손패를 8개 받아요. 대신 공격도 막기도 못 해요.`));}
+    box.append(el('div','combo-m',`재정비하면 이번 라운드에 체력 ${REST_HEAL}을 회복하고 다음 라운드에 손패를 8개 받아요. 대신 공격도 막기도 못 해요.`));}
   else{
     const err=comboError(c,p),pw=power(c,p.bonus),act=actionOf(c);
     box.append(el('div','combo-n',nameOf(c)));
