@@ -1,12 +1,12 @@
 // 오프라인에서도 사전과 컴퓨터 연습이 열리도록 파일을 보관해요.
-// 사이트 파일은 항상 인터넷에서 새로 받아 보고, 안 될 때만 보관본을 써요.
-// (파일을 고쳐 올리면 다음에 열 때 바로 반영돼요)
-const CACHE = 'rune-v1';
+// 사이트 파일은 열 때마다 서버에 새 버전이 있는지 확인하고, 인터넷이 안 될 때만 보관본을 써요.
+// (브라우저 임시 보관도 거치지 않아서, 파일을 고쳐 올리면 다음에 열 때 바로 반영돼요)
+const CACHE = 'rune-v2';
 const CORE = ['./', 'index.html', 'duel.html', 'rules.html', 'firebase-config.js', 'manifest.webmanifest',
   'icon-192.png', 'icon-512.png', 'icon-maskable.png', 'apple-touch-icon.png', 'favicon.png'];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE.map(u => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys()
@@ -18,7 +18,7 @@ self.addEventListener('fetch', e => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin === location.origin) {
-    e.respondWith(fetch(req).then(r => {
+    e.respondWith(fetch(req, { cache: 'no-cache' }).then(r => {
       if (r.ok) { const cp = r.clone(); caches.open(CACHE).then(c => c.put(req, cp)); }
       return r;
     }).catch(() => caches.match(req, { ignoreSearch: true })
