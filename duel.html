@@ -13,23 +13,25 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="룬 사전">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+Runic&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hahmlet:wght@600;700&family=Noto+Serif+KR:wght@500;700&family=Noto+Sans+Runic&display=swap">
 <style>
 /* 레이아웃: 위에 상대, 가운데 지난 라운드 결과, 아래에 나와 손패. 한 손으로 위아래만 훑는 세로 한 줄 */
 :root{
   --bg:#e9ebee;--card:#f6f7f9;--ink:#1c2230;--mute:#566074;--line:#cfd4dc;--rune:#243049;--accent:#9a6a18;
   --el:#1b767c;--buf:#b0560f;--heal:#2e7a39;--ctl:#2f5cb0;--mys:#a8367a;--fo:#7a4fb0;
   --good:#2e7a39;--warn:#a86a10;--bad:#c2414b;
-  --f-body:'Gowun Batang','Noto Serif KR',serif;--f-rune:'Noto Sans Runic','Segoe UI Historic','Segoe UI Symbol',sans-serif;
+  --f-body:'Noto Serif KR','Gowun Batang',serif;--f-title:'Hahmlet','Noto Serif KR',serif;--f-rune:'Noto Sans Runic','Segoe UI Historic','Segoe UI Symbol',sans-serif;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141a26;--card:#1d2536;--ink:#e6e9f0;--mute:#9aa4b8;--line:#2c3650;--rune:#dfe6f5;--accent:#e0b058;--el:#52c3c9;--buf:#f0a35a;--heal:#72c77f;--ctl:#86a8f2;--mys:#f08cc4;--fo:#b995ec;--good:#72c77f;--warn:#e0b058;--bad:#f07a82;color-scheme:dark}}
 :root[data-theme="dark"]{--bg:#141a26;--card:#1d2536;--ink:#e6e9f0;--mute:#9aa4b8;--line:#2c3650;--rune:#dfe6f5;--accent:#e0b058;--el:#52c3c9;--buf:#f0a35a;--heal:#72c77f;--ctl:#86a8f2;--mys:#f08cc4;--fo:#b995ec;--good:#72c77f;--warn:#e0b058;--bad:#f07a82;color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--f-body);margin:0}
+body{background:var(--bg);color:var(--ink);font:500 16px/1.5 var(--f-body);margin:0}
 .wrap{max-width:760px;margin:0 auto;padding-block:16px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 h1{font-size:28px;margin:4px 0 2px;text-wrap:balance}
 h2{font-size:19px;margin:0 0 8px}
+/* 제목은 새긴 듯한 함렛, 본문은 또렷한 노토 세리프 */
+h1,h2,.over .big{font-family:var(--f-title);font-weight:700}
 p{margin:6px 0}
 a{color:var(--accent)}
 .sub{color:var(--mute);font-size:14px}
@@ -578,7 +580,7 @@ function setupPad(){
 }
 function drawPad(){
   const x=pad.ctx;if(!x)return;const s=pad.size,cs=getComputedStyle(document.documentElement);x.clearRect(0,0,s,s);
-  if(!pad.strokes.length&&!pad.cur){x.fillStyle=cs.getPropertyValue('--mute').trim();x.font='14px "Gowun Batang", serif';x.textAlign='center';x.fillText('여기에 룬을 새겨요',s/2,s/2)}
+  if(!pad.strokes.length&&!pad.cur){x.fillStyle=cs.getPropertyValue('--mute').trim();x.font='500 14px "Noto Serif KR", serif';x.textAlign='center';x.fillText('여기에 룬을 새겨요',s/2,s/2)}
   x.strokeStyle=cs.getPropertyValue('--rune').trim();x.lineWidth=Math.max(4,s/45);x.lineCap='round';x.lineJoin='round';
   [...pad.strokes,...(pad.cur?[pad.cur]:[])].forEach(st=>{x.beginPath();st.forEach(([a,b],k)=>k?x.lineTo(a,b):x.moveTo(a,b));if(st.length===1)x.lineTo(st[0][0]+.1,st[0][1]);x.stroke()});
 }
