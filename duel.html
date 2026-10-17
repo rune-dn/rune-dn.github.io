@@ -334,7 +334,8 @@ function resolve(S0,sub){
   for(const s of SEATS){const p=P[s];if(p.spirit){P[O[s]].hp-=p.spirit.dmg;E.push(`@${s}의 정령 → @${O[s]}에게 ${p.spirit.dmg} 피해`);p.spirit.turns--;if(p.spirit.turns<=0)p.spirit=null}}
   if(S.field){S.field.turns--;if(S.field.turns<=0){S.field=null;E.push('영역이 사라졌어요')}}
   for(const s of SEATS){const p=P[s];if(p.hp<=0&&p.reviveReady){p.hp=REVIVE_HP;p.reviveReady=false;p.reviveUsed=true;E.push(`@${s} 부활! 체력 ${REVIVE_HP}`)}}
-  for(const s of SEATS){const p=P[s];for(const i of C0[s]){const j=p.hand.indexOf(i);if(j>=0)p.disc.push(p.hand.splice(j,1)[0])}}
+  /* 라운드가 끝나면 쓴 룬과 남은 손패를 모두 버려요. 다음 라운드에 새로 7개를 받아요 */
+  for(const s of SEATS){const p=P[s];p.disc.push(...p.hand);p.hand=[]}
   S.last={round:S.round,play:C0,shown:C,pw,hp0,hp1:{h:P.h.hp,g:P.g.hp},events:E};
   const hd=P.h.hp<=0,gd=P.g.hp<=0;
   if(hd||gd)S.over={winner:hd&&gd?(P.h.hp>P.g.hp?'h':P.g.hp>P.h.hp?'g':'draw'):(hd?'g':'h'),reason:hd&&gd?'double':'ko'};
@@ -369,7 +370,7 @@ function aiValue(c,me,op,field,known){
   if(k.includes('소환')&&els(c).length)v+=R(p/SPIRIT_DIV)*(k.includes('원초적 힘')?8:3)*0.8;
   if(k.includes('영역')&&els(c).length)v+=p/DIV*0.3*2;
   if(booms(c).length&&!k.includes('정화'))v-=p/4;
-  return v-c.length*0.5+Math.random()*4;
+  return v-c.length*0.1+Math.random()*4;
 }
 function aiChoose(me,op,field,known){
   let best=[],bv=-1e9;const h=me.hand;
@@ -526,7 +527,7 @@ function renderPlay(){
 function renderCombo(){
   const S=A.S,p=S.P[A.seat],c=curCombo(),box=$('#combo');box.replaceChildren();
   box.append(el('div','combo-g',c.map(i=>D[i][0]).join('')));
-  if(!c.length){box.append(el('div','combo-m','손패에서 룬을 눌러 조합하세요. 원소 → 효과 → 형태 순서예요.'));}
+  if(!c.length){box.append(el('div','combo-m','손패에서 룬을 눌러 조합하세요. 원소 → 효과 → 형태 순서예요. 남은 룬은 라운드가 끝나면 버려져요.'));}
   else{
     const err=comboError(c,p),pw=power(c,p.bonus),act=actionOf(c);
     box.append(el('div','combo-n',nameOf(c)));
