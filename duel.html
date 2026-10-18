@@ -647,6 +647,9 @@ function nameOf(ix){
 
 /* ───── 규칙 엔진 (규칙서 최종본) ───── */
 const HPMAX=100,DIV=3,HEALDIV=1.75,REVIVE_HP=20,PURE_HEAL=5,SPIRIT_DIV=12,HAND=7,REST_HEAL=10,ROUND_MS=60000;
+/* 재정비를 연달아 쓸수록 회복이 줄어요: 10 → 6 → 3 → 0. 룬을 내면 다시 10부터 */
+const REST_STEPS=[10,6,3,0];
+const restHeal=p=>REST_STEPS[Math.min(p.restStreak||0,REST_STEPS.length-1)];
 /* 라운드 결과 연출을 보는 동안은 60초가 줄지 않게 여유를 줘요 */
 const PLAY_GRACE=14000;
 const BEATS={물:'불',불:'나무',나무:'땅',땅:'바람',바람:'번개',번개:'물'};
@@ -660,8 +663,8 @@ const catN=(c,t)=>c.filter(i=>D[i][3]===t).length;
 const booms=c=>{const k=kw(c);return OPP.filter(p=>k.includes(p[0])&&k.includes(p[1]))};
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 const BAG=[...[0,1,2,3,4,5].flatMap(i=>[i,i,i]),...Array.from({length:23},(_,k)=>k+6)];
-function newPlayer(){return {hp:HPMAX,bag:shuffle(BAG),hand:[],disc:[],limit:5,lastGuard:false,lastBind:false,stops:0,reviveUsed:false,reviveReady:false,bonus:1,extra:0,spirit:null,foresight:false}}
-/* 재정비(룬을 내지 않기): 이번 라운드 체력 10 회복, 다음 라운드 손패 8개 */
+function newPlayer(){return {hp:HPMAX,bag:shuffle(BAG),hand:[],disc:[],limit:5,lastGuard:false,lastBind:false,stops:0,reviveUsed:false,reviveReady:false,bonus:1,extra:0,spirit:null,foresight:false,restStreak:0}}
+/* 재정비(룬을 내지 않기): 이번 라운드 체력 회복(연달아 쓰면 10 → 6 → 3 → 0), 다음 라운드 손패 8개 */
 /* 손패는 7개, 재정비한 다음 라운드는 1개 더(8개) */
 function draw(p){const n=HAND+(p.extra||0);while(p.hand.length<n){if(!p.bag.length){p.bag=shuffle(p.disc);p.disc=[]}if(!p.bag.length)break;p.hand.push(p.bag.pop())}p.hand.sort((a,b)=>a-b)}
 function newGame(){const S={round:1,field:null,last:null,over:null,P:{h:newPlayer(),g:newPlayer()}};draw(S.P.h);draw(S.P.g);return S}
@@ -723,10 +726,11 @@ function resolve(S0,sub){
   for(const s of SEATS)if(has(C[s],'정지')){P[s].stops++;if(blocked(s))E.push(`@${O[s]}의 정화가 @${s}의 정지를 막았어요`);else stopped=true}
   const pw={h:power(C.h,P.h.bonus),g:power(C.g,P.g.bonus)};
   const rest={h:!C0.h.length&&!skip.h,g:!C0.g.length&&!skip.g};
+  const restN={h:rest.h?restHeal(P.h):0,g:rest.g?restHeal(P.g):0};
   const dealt={h:0,g:0},heal={h:0,g:0},selfd={h:0,g:0},refl={h:0,g:0},oath={h:false,g:false};
   if(stopped){
     E.push('정지! 이번 라운드 양쪽 행동이 모두 취소됐어요');
-    for(const s of SEATS)if(rest[s]){const n=Math.max(0,Math.min(REST_HEAL,HPMAX-P[s].hp));P[s].hp+=n;if(n>0)E.push(`@${s} 체력 ${n} 회복`)}
+    for(const s of SEATS)if(rest[s]){const n=Math.max(0,Math.min(restN[s],HPMAX-P[s].hp));P[s].hp+=n;if(n>0)E.push(`@${s} 체력 ${n} 회복`)}
     for(const s of SEATS)if(attacks(C[s])&&has(C[s],'맹세'))oath[s]=true;
   }else{
     for(const s of SEATS)if(booms(C[s]).length){
@@ -763,7 +767,7 @@ function resolve(S0,sub){
       else if(dealt[O[s]]>0){refl[O[s]]+=dealt[O[s]];E.push(`@${s}의 정신 연결: @${O[s]}도 ${dealt[O[s]]} 피해`)}
     }
     for(const s of SEATS)if(has(C[s],'치유'))heal[s]+=R(pw[s]/HEALDIV*(els(C[s]).includes('나무')?1.5:1));
-    for(const s of SEATS)if(rest[s])heal[s]+=REST_HEAL;
+    for(const s of SEATS)if(rest[s])heal[s]+=restN[s];
     for(const s of SEATS){
       P[s].hp-=dealt[O[s]]+selfd[s]+refl[s];
       if(heal[s]){const n=Math.max(0,Math.min(heal[s],HPMAX-P[s].hp));P[s].hp+=n;if(n>0)E.push(`@${s} 체력 ${n} 회복`)}
@@ -775,8 +779,8 @@ function resolve(S0,sub){
     if(has(c,'계약')){p.hp-=10;p.bonus*=2;E.push(`@${s}의 계약: 체력 10을 내고 다음 라운드 위력 ×2`)}
     if(oath[s]){p.bonus*=2;E.push(`@${s}의 맹세: 다음 라운드 위력 ×2`)}
     if(has(c,'속박')){if(blocked(s))E.push(`@${O[s]}의 정화가 @${s}의 속박을 막았어요`);else{nextLimit[O[s]]=1;E.push(`@${s}의 속박: 다음 라운드 @${O[s]}는 룬 1개만`)}}
-    if(rest[s]){p.extra=1;E.push(`@${s}의 재정비: 다음 라운드 손패 8개`)}
-    else p.extra=0;
+    if(rest[s]){p.extra=1;p.restStreak=(p.restStreak||0)+1;E.push(`@${s}의 재정비: 다음 라운드 손패 8개`+(p.restStreak>1?` (연달아 ${p.restStreak}번째, 회복 ${restN[s]})`:''))}
+    else{p.extra=0;if(C0[s].length)p.restStreak=0}
     p.lastGuard=has(c,'수호');p.lastBind=has(c,'속박');
     if(has(c,'부활')){p.reviveReady=true;E.push(`@${s}의 부활이 대기 중이에요`)}
     p.foresight=has(c,'예언');
@@ -789,7 +793,7 @@ function resolve(S0,sub){
   for(const s of SEATS){const p=P[s];if(p.hp<=0&&p.reviveReady){p.hp=REVIVE_HP;p.reviveReady=false;p.reviveUsed=true;E.push(`@${s} 부활! 체력 ${REVIVE_HP}`)}}
   /* 라운드가 끝나면 쓴 룬과 남은 손패를 모두 버려요. 다음 라운드에 새로 7개를 받아요 */
   for(const s of SEATS){const p=P[s];p.disc.push(...p.hand);p.hand=[]}
-  S.last={round:S.round,play:C0,shown:C,pw,hp0,hp1:{h:P.h.hp,g:P.g.hp},events:E,skip};
+  S.last={round:S.round,play:C0,shown:C,pw,hp0,hp1:{h:P.h.hp,g:P.g.hp},events:E,skip,restN};
   const hd=P.h.hp<=0,gd=P.g.hp<=0;
   if(hd||gd)S.over={winner:hd&&gd?(P.h.hp>P.g.hp?'h':P.g.hp>P.h.hp?'g':'draw'):(hd?'g':'h'),reason:hd&&gd?'double':'ko'};
   else{S.round++;draw(P.h);draw(P.g)}
@@ -832,8 +836,8 @@ function aiChoose(me,op,field,known){
     for(let j=start;j<h.length;j++){if(j>start&&h[j]===h[j-1])continue;rec(j+1,[...cur,j])}
   };
   rec(0,[]);
-  /* 재정비(체력 10 회복 + 다음 손패 8개)가 낼 수 있는 조합보다 나으면 재정비해요 */
-  const restV=Math.min(REST_HEAL,HPMAX-me.hp)*(me.hp<50?1.4:0.5)+2+Math.random()*4;
+  /* 재정비(체력 회복 + 다음 손패 8개)가 낼 수 있는 조합보다 나으면 재정비해요. 연달아 쓸수록 회복이 줄어요 */
+  const restV=Math.min(restHeal(me),HPMAX-me.hp)*(me.hp<50?1.4:0.5)+(me.restStreak?1:2)+Math.random()*(me.restStreak?2:4);
   if(restV>bv)return [];
   return best;
 }
@@ -933,7 +937,7 @@ return strokes=>combined(strokes,1);
 })();
 const REJECT=2.2; /* 이보다 멀면 알아보기 어렵다고 안내 */
 /* 결투장 연출이 쓰는 규칙 함수 묶음 */
-const RD={D,KI,EFX,nameOf,HPMAX,DIV,HEALDIV,REST_HEAL,HAND,BEATS,RK,newGame,comboError,power,attacks,actionOf,elemMult,resolve,aiChoose,kw,has,els,catN,booms};
+const RD={D,KI,EFX,nameOf,HPMAX,DIV,HEALDIV,REST_HEAL,restHeal,HAND,BEATS,RK,newGame,comboError,power,attacks,actionOf,elemMult,resolve,aiChoose,kw,has,els,catN,booms};
 
 
 /* ───── 화면 상태 ───── */
@@ -1687,7 +1691,7 @@ function showTip(b,i,why){let t=$('#rtip');if(!t){t=mk('div','rtip');t.id='rtip'
 function hideTip(){const t=$('#rtip');if(t)t.classList.remove('on')}
 for(const ev of ['pointerup','pointercancel'])document.addEventListener(ev,()=>{clearTimeout(LP.t);hideTip()});
 window.addEventListener('scroll',hideTip,{passive:true});
-function chipTexts(p){const a=[];if(p.reviveReady)a.push('부활 대기');if(p.limit===1)a.push('속박: 룬 1개');if(p.bonus>1)a.push(`다음 위력 ×${p.bonus}`);if(p.extra)a.push('재정비: 손패 8개');
+function chipTexts(p){const a=[];if(p.reviveReady)a.push('부활 대기');if(p.limit===1)a.push('속박: 룬 1개');if(p.bonus>1)a.push(`다음 위력 ×${p.bonus}`);if(p.extra)a.push('재정비: 손패 8개');if(p.restStreak)a.push(`다음 재정비 회복 ${RD.restHeal(p)}`);
   if(p.spirit)a.push(`${p.spirit.anc?'고대 정령':'정령'} ${p.spirit.turns}라운드 · ${p.spirit.dmg} 피해`);if(p.foresight)a.push('예언');if(p.lastGuard)a.push('수호 쉬는 중');if(p.lastBind)a.push('속박 쉬는 중');if(p.stops)a.push('정지 사용함');if(p.reviveUsed)a.push('부활 사용함');return a}
 const FCOL={불:'#ff7a3a',물:'#4fa3e8',바람:'#5fd0b0',땅:'#c8a064',번개:'#9b7bff',나무:'#7cc456'};
 function setField(f){const fl=$('#floor'),pill=$('#fieldpill');if(f){floorShow(f.el);pill.textContent=`영역: ${f.el} · ${f.turns}라운드 · ${f.el} 공격 ×1.3`;pill.classList.add('on')}else{fl.classList.remove('on');pill.classList.remove('on')}}
@@ -1781,7 +1785,7 @@ function renderRC(){const S=RG.S;if(!S)return;const p=S.P.h,c=rgCombo(),lock=RG.
   {const b=mk('button','rcard pad-tile'+(RG.padOpen?' on':''));b.type='button';b.append(mk('span','cat','그리기'),mk('b','gl','ᛝ'),mk('span','kw','각인'));
     b.setAttribute('aria-pressed',String(!!RG.padOpen));b.setAttribute('aria-label','각인: 룬을 그려서 조합에 넣어요');b.disabled=lock;b.onclick=()=>{ac();padOpen(!RG.padOpen)};hd.append(b)}
   if(lock&&RG.padOpen)padOpen(false);
-  $('#rc-undo').disabled=lock||!RG.sel.length;$('#rc-clear').disabled=lock||!RG.sel.length;$('#rc-pass').disabled=lock;$('#rc-go').disabled=lock||!c.length;$('#pad-ok').disabled=lock||!c.length;
+  $('#rc-undo').disabled=lock||!RG.sel.length;$('#rc-clear').disabled=lock||!RG.sel.length;$('#rc-pass').disabled=lock;{const n=RD.restHeal(p),b=$('#rc-pass');b.title=`룬을 내지 않고 체력 ${n} 회복 · 다음 손패 8개`;b.setAttribute('aria-label',`재정비: 체력 ${n} 회복, 다음 손패 8개`);b.replaceChildren('재정비',...(p.restStreak?[mk('span','k',` +${n}`)]:[]))}$('#rc-go').disabled=lock||!c.length;$('#pad-ok').disabled=lock||!c.length;
   /* 온라인: 확정한 뒤에는 기다리는 중이라고 알려요 */
   const wait=netLocked()&&!RG.busy&&!S.over;$('#rc-go').textContent=wait?'대기 중':'확정';
   if(A.kind==='net'&&!RG.busy&&!S.over)$('#rc-status').textContent=wait?(oppReady()?'둘 다 확정했어요. 결과를 기다리는 중이에요.':'확정했어요. 상대를 기다리는 중이에요.'):(oppReady()?'상대는 확정했어요.':'')}
@@ -1807,7 +1811,7 @@ function rgEnd(S){const o=S.over,kind=o.winner==='draw'?'draw':o.winner==='h'?'w
 /* ───── 온라인: 내 자리(방장 h / 손님 g)에서 본 상태로 바꿔 보여 줘요 ───── */
 function viewOf(S,seat){if(!S)return S;const T=JSON.parse(JSON.stringify(S));if(seat!=='g')return T;const o=s=>s==='h'?'g':'h',sw=x=>x&&{h:x.g,g:x.h};
   T.P={h:T.P.g,g:T.P.h};if(T.field&&T.field.by)T.field.by=o(T.field.by);
-  if(T.last){const L=T.last;for(const k of ['play','shown','pw','hp0','hp1','skip'])L[k]=sw(L[k]);L.events=L.events.map(t=>t.replace(/@([hg])/g,(_,s)=>'@'+o(s)))}
+  if(T.last){const L=T.last;for(const k of ['play','shown','pw','hp0','hp1','skip','restN'])L[k]=sw(L[k]);L.events=L.events.map(t=>t.replace(/@([hg])/g,(_,s)=>'@'+o(s)))}
   if(T.over&&T.over.winner!=='draw')T.over.winner=o(T.over.winner);return T}
 /* 지금 보이는 판을 그 상태로 바로 맞춰요 (처음 들어올 때, 다시 들어올 때) */
 function applyLook(){const L=A.meta&&A.meta.look,f=id=>CHARS.find(c=>c.id===id);if(!L||!f(L.h)||!f(L.g)){reroll();return}
@@ -1888,7 +1892,7 @@ async function rKO(who){const f=F[who],hp=f.querySelector('.hp').getBoundingClie
   for(let i=0;i<34;i++)part({k:'shard',x:hp.left-a.left+Math.random()*hp.width,y:hp.top-a.top+hp.height/2,vx:rnd(-120,120),vy:rnd(-200,-40),g:700,drag:.97,life:rnd(.6,1.1),r:rnd(2,4),rot:rnd(0,6),vr:rnd(-12,12),c:i%3?'#f07a82':'#f4e6c8'});
   f.querySelector('.hp').style.visibility='hidden';f.classList.add('ko');sprDie(who,other(who))}
 function showCombosReal(L){for(const s of ['g','h']){const c=$('#c-'+s),pl=L.play[s],sh=L.shown[s];c.querySelector('.rn').replaceChildren(...pl.map(i=>{const b=mk('b',null,RD.D[i][0]);b.style.setProperty('--c',runeCol(i));return b}));const sk=!pl.length&&L.skip&&L.skip[s];c.querySelector('.nm').textContent=sk?'시간 초과':RD.nameOf(pl);
-  c.querySelector('.ac').textContent=('· '+(pl.length?`${RD.actionOf(sh)} · 위력 ${Math.round(L.pw[s])}`:sk?'아무것도 하지 못했어요':`체력 ${RD.REST_HEAL} 회복 · 다음 손패 8개`)).replace(/ (\d)/g,'\u00a0$1');c.classList.remove('flip');void c.offsetWidth;c.classList.add('flip')}}
+  c.querySelector('.ac').textContent=('· '+(pl.length?`${RD.actionOf(sh)} · 위력 ${Math.round(L.pw[s])}`:sk?'아무것도 하지 못했어요':`체력 ${L.restN?L.restN[s]:RD.REST_HEAL} 회복 · 다음 손패 8개`)).replace(/ (\d)/g,'\u00a0$1');c.classList.remove('flip');void c.offsetWidth;c.classList.add('flip')}}
 async function playReal(S1){const L=S1.last,C=L.shown,C0=L.play,ev=parseEv(L.events);
   showCombosReal(L);$('#r-title').textContent=`라운드 ${L.round} 결과`;$('#r-log').innerHTML='';(L.events.length?L.events:['아무 일도 일어나지 않았어요']).forEach(t=>addLog(fillW(t)));
   HP.h=L.hp0.h;HP.g=L.hp0.g;for(const s of ['h','g'])if(F[s].querySelector('.chips').textContent.includes('재정비'))chips(s,[]);
@@ -1908,6 +1912,8 @@ async function playReal(S1){const L=S1.last,C=L.shown,C0=L.play,ev=parseEv(L.eve
     for(const s of ['h','g'])if(ev.self[s]){const c=center(s);hitCore(c.x,c.y,'불',30,c.bottom-4);sfx('불');shake(6);knock(s,other(s),ev.self[s]);HP[s]-=ev.self[s];setHP(s,HP[s]);number(s,ev.self[s],'resist','폭주');await sleep(480)}
     for(const s of ['h','g'])if(ev.refl[s]){const r=ev.refl[s];absorbStream(other(s),s);sprGlow(s,'#c79bff',.8);await sleep(400);HP[s]-=r.d;setHP(s,HP[s]);number(s,r.d,'small','정신 연결');knock(s,r.by,r.d);await sleep(420)}
     for(const s of ['h','g'])if(ev.heal[s])await rHeal(s,ev.heal[s],{heal:RD.has(C[s],'치유'),rest:!C0[s].length,absorb:RD.has(C[s],'흡수')&&!!ev.attack[s]})}
+  /* 재정비했지만 회복이 0이면(연달아 써서 줄었거나 체력이 가득) 재정비 연출만 보여 줘요 */
+  for(const s of ['h','g'])if(ev.rest[s]&&!ev.heal[s]){regroupFX(s);sfx('regroup');number(s,'회복 없음','block small','재정비');await sleep(620)}
   for(const s of ['h','g']){
     if(ev.contract[s]){sprGlow(s,'#c0392b',.9);sfx('hit');HP[s]-=10;setHP(s,HP[s]);number(s,'-10','resist small','계약');await sleep(420)}
     if(ev.oath[s]){number(s,'위력 ×2','heal small','맹세');await sleep(320)}
