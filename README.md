@@ -7,7 +7,8 @@ GitHub Pages에 올리면 누구나 링크로 열 수 있고, 휴대폰 홈 화�
 |---|---|
 | `index.html` | 룬 사전 (도감 기록은 각자 기기의 브라우저에 저장) |
 | `duel.html` | 룬 대결 (친구와 대결은 Firebase, 컴퓨터와 연습은 설정 없이 바로) |
-| `rules.html` | 룬 대결 규칙서 |
+| `rules.html` | 룬 대결 규칙서 (캐릭터 소개 포함) |
+| `duel/` | 룬 대결 그림 (캐릭터·배경·스킬 이펙트·영역 마법진)과 그림 목록 `assets.js` |
 | `firebase-config.js` | **Firebase 설정값을 넣는 파일** |
 | `firestore.rules` | Firebase에 붙여넣을 보안 규칙 |
 | `manifest.webmanifest`, `sw.js`, 아이콘 | 앱 설치와 오프라인용 |
