@@ -67,6 +67,12 @@ button:focus-visible,input:focus-visible,canvas:focus-visible{outline:2px solid 
 .wait-set{border-top:1px solid var(--line);padding-top:12px}
 /* 대결 화면: 넓게 쓰고, 어두운 결투장 */
 body.playing .wrap{max-width:1320px}
+/* 대결 중에는 페이지 바깥 배경도 지금 맵 그림을 흐리게 깔아서 결투장과 이어지게 해요 */
+.pagebg{position:fixed;inset:-48px;z-index:0;pointer-events:none;background:#0b0d12 center/cover no-repeat;filter:blur(14px) brightness(.68) saturate(1.2);opacity:0;transition:opacity .7s}
+.pagebg::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,rgba(6,8,12,0) 45%,rgba(6,8,12,.42) 100%),linear-gradient(180deg,rgba(6,8,12,.3),rgba(6,8,12,0) 18%,rgba(6,8,12,0) 75%,rgba(6,8,12,.38))}
+body.playing .pagebg.on{opacity:1}
+body>.wrap{position:relative;z-index:1}
+@media (prefers-reduced-motion:reduce){.pagebg{transition:none}}
 body.playing .top .sub{display:none}
 @media (max-width:719px){body.playing .wrap{padding-top:8px}body.playing h1{font-size:21px;margin:0}body.playing .links{font-size:13px}
   #v-play{margin-top:8px;gap:10px}#v-play .bar{flex-wrap:nowrap}#v-play .bar .who{display:none}}
@@ -521,6 +527,7 @@ body.playing .top .sub{display:none}
 </style>
 </head>
 <body>
+<div class="pagebg" id="pagebg" aria-hidden="true"></div>
 <div class="wrap">
   <div class="top">
     <div><h1>룬 대결</h1><div class="sub">룬을 조합해 동시에 공개하고, 상대 체력 100을 먼저 0으로 만들면 이겨요.</div></div>
@@ -538,7 +545,7 @@ body.playing .top .sub{display:none}
     </div>
     <div class="panel stack">
       <h2>혼자 연습</h2>
-      <p>컴퓨터와 같은 규칙으로 대결해요. 제한 시간은 없어요.</p>
+      <p>컴퓨터와 같은 규칙으로 대결해요. 라운드마다 60초 안에 조합하고, 시간이 지나면 그 라운드는 아무것도 하지 않고 넘어가요.</p>
       <div class="row"><button class="btn" id="b-practice" type="button">컴퓨터와 연습</button></div>
     </div>
     <div class="panel stack setp" aria-labelledby="set-title">
@@ -702,6 +709,9 @@ function transform(target,by){const e=els(by);return target.map(i=>i>=6?i:(e.len
 function resolve(S0,sub){
   const S=JSON.parse(JSON.stringify(S0)),P=S.P,O={h:'g',g:'h'},E=[],SEATS=['h','g'];
   const C0={h:sub.h||[],g:sub.g||[]},hp0={h:P.h.hp,g:P.g.hp};
+  /* 시간 안에 확정하지 못한 쪽: 재정비가 아니라 아무것도 하지 않고 넘어가요 (회복도, 손패 8개도 없어요) */
+  const skip={h:!!(sub.skip&&sub.skip.h)&&!C0.h.length,g:!!(sub.skip&&sub.skip.g)&&!C0.g.length};
+  for(const s of SEATS)if(skip[s])E.push(`@${s}는 시간이 지나 아무것도 하지 못했어요`);
   const pure={h:has(C0.h,'정화'),g:has(C0.g,'정화')},blocked=s=>pure[O[s]];
   for(const s of SEATS)if(pure[s]){const n=Math.min(PURE_HEAL,HPMAX-P[s].hp);P[s].hp+=n;E.push(`@${s}의 정화: 체력 ${n} 회복`)}
   const C={h:C0.h.slice(),g:C0.g.slice()};
@@ -712,7 +722,7 @@ function resolve(S0,sub){
   let stopped=false;
   for(const s of SEATS)if(has(C[s],'정지')){P[s].stops++;if(blocked(s))E.push(`@${O[s]}의 정화가 @${s}의 정지를 막았어요`);else stopped=true}
   const pw={h:power(C.h,P.h.bonus),g:power(C.g,P.g.bonus)};
-  const rest={h:!C0.h.length,g:!C0.g.length};
+  const rest={h:!C0.h.length&&!skip.h,g:!C0.g.length&&!skip.g};
   const dealt={h:0,g:0},heal={h:0,g:0},selfd={h:0,g:0},refl={h:0,g:0},oath={h:false,g:false};
   if(stopped){
     E.push('정지! 이번 라운드 양쪽 행동이 모두 취소됐어요');
@@ -779,7 +789,7 @@ function resolve(S0,sub){
   for(const s of SEATS){const p=P[s];if(p.hp<=0&&p.reviveReady){p.hp=REVIVE_HP;p.reviveReady=false;p.reviveUsed=true;E.push(`@${s} 부활! 체력 ${REVIVE_HP}`)}}
   /* 라운드가 끝나면 쓴 룬과 남은 손패를 모두 버려요. 다음 라운드에 새로 7개를 받아요 */
   for(const s of SEATS){const p=P[s];p.disc.push(...p.hand);p.hand=[]}
-  S.last={round:S.round,play:C0,shown:C,pw,hp0,hp1:{h:P.h.hp,g:P.g.hp},events:E};
+  S.last={round:S.round,play:C0,shown:C,pw,hp0,hp1:{h:P.h.hp,g:P.g.hp},events:E,skip};
   const hd=P.h.hp<=0,gd=P.g.hp<=0;
   if(hd||gd)S.over={winner:hd&&gd?(P.h.hp>P.g.hp?'h':P.g.hp>P.h.hp?'g':'draw'):(hd?'g':'h'),reason:hd&&gd?'double':'ko'};
   else{S.round++;draw(P.h);draw(P.g)}
@@ -1067,9 +1077,9 @@ async function hostTick(){
   if(A.kind!=='net'||A.seat!=='h'||A.resolving||!A.meta||A.meta.phase!=='play'||!A.S||A.S.over)return;
   const S=A.S,ok=s=>A.subs[s]&&A.subs[s].round===S.round;
   if(!(ok('h')&&ok('g'))&&Date.now()<A.deadline+1500)return;
-  const pick=s=>{if(!ok(s))return [];const c=(A.subs[s].combo||[]).filter(i=>Number.isInteger(i)&&i>=0&&i<29);return comboError(c,S.P[s])?[]:c};
+  const clean=s=>(A.subs[s].combo||[]).filter(i=>Number.isInteger(i)&&i>=0&&i<29),bad=s=>!ok(s)||!!comboError(clean(s),S.P[s]),pick=s=>bad(s)?[]:clean(s);
   A.resolving=true;
-  try{const S2=resolve(S,{h:pick('h'),g:pick('g')});await roomRef(A.code).set({...A.meta,phase:S2.over?'over':'play',S:S2,deadline:S2.over?0:Date.now()+ROUND_MS+PLAY_GRACE,at:Date.now()})}
+  try{const S2=resolve(S,{h:pick('h'),g:pick('g'),skip:{h:bad('h'),g:bad('g')}});await roomRef(A.code).set({...A.meta,phase:S2.over?'over':'play',S:S2,deadline:S2.over?0:Date.now()+ROUND_MS+PLAY_GRACE,at:Date.now()})}
   catch(e){DUEL.note(writeFail(e))}
   A.resolving=false;
 }
@@ -1166,6 +1176,10 @@ function floorShow(el,color){const fl=$('#floor'),A=typeof FLA!=='undefined'&&FL
   fl.classList.add('on')}
 function floorSVG(){const runes=FUTH.slice(0,16);let t='';for(let i=0;i<16;i++){const a=i/16*Math.PI*2;t+=`<text x="${(160+128*Math.cos(a)).toFixed(1)}" y="${(50+36*Math.sin(a)+5).toFixed(1)}" text-anchor="middle" font-size="12">${runes[i]}</text>`}
   return `<svg viewBox="0 0 320 100" preserveAspectRatio="none" aria-hidden="true"><g class="tint"><ellipse cx="160" cy="50" rx="156" ry="47" fill="var(--fc)" fill-opacity=".22"/><ellipse cx="160" cy="50" rx="156" ry="47" fill="none" stroke="var(--fc)" stroke-width="2.5"/><ellipse cx="160" cy="50" rx="112" ry="33" fill="none" stroke="var(--fc)" stroke-opacity=".7" stroke-dasharray="5 6"/><g fill="var(--fc)" fill-opacity=".8" font-family="'Noto Sans Runic',sans-serif">${t}</g></g></svg>`}
+/* 페이지 바깥 배경: 맵 그림을 아주 작게 줄인 뒤 크게 펴서 부드럽게 흐려요 (가볍게) */
+function pageBg(src){const el=$('#pagebg');if(!el||el.dataset.src===src)return;el.dataset.src=src;const im=new Image();
+  im.onload=()=>{if(el.dataset.src!==src)return;let u=src;try{const w=96,h=Math.max(1,Math.round(w*im.naturalHeight/im.naturalWidth)),c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(im,0,0,w,h);u=c.toDataURL('image/jpeg',.82)}catch(e){}
+    el.style.backgroundImage=`url("${u}")`;el.classList.add('on')};im.src=src}
 function layout(force){const r=AR.getBoundingClientRect(),wide=r.width>=720;
   AR.classList.toggle('wide',wide);AR.classList.toggle('real',RG.on);const r2=AR.getBoundingClientRect();
   /* 실전 연습에서는 위쪽 무대 높이(--sh)만 결투장으로 써요. 아래는 조작판 */
@@ -1174,7 +1188,7 @@ function layout(force){const r=AR.getBoundingClientRect(),wide=r.width>=720;
   LAY={wide,w:r2.width,h:H};
   const img=$('#bgimg'),src=ASSET.bg[pick.bg][wide?'wide':'tall'];if(img.getAttribute('src')!==src)img.src=src;
   img.style.objectPosition=(!wide&&pick.bg==='keep')?'100% 50%':'50% 50%';
-  const rb=$('#rc-bgimg');if(rb.getAttribute('src')!==src)rb.src=src;rb.style.objectPosition=img.style.objectPosition;
+  const rb=$('#rc-bgimg');if(rb.getAttribute('src')!==src)rb.src=src;rb.style.objectPosition=img.style.objectPosition;pageBg(src);
   if(!$('#floor').firstChild)$('#floor').innerHTML=floorSVG();
   const d=DPR();CV.width=Math.round(r2.width*d);CV.height=Math.round(H*d);CTX.setTransform(d,0,0,d,0,0);CVB.width=CV.width;CVB.height=CV.height;CTXB.setTransform(d,0,0,d,0,0);
   placeSprites()}
@@ -1641,7 +1655,13 @@ function restart(){RI=0;HP.h=100;HP.g=100;field=null;ROUND.guard={};ROUND.wall={
   $('#floor').classList.remove('on');$('#fieldpill').classList.remove('on');$('#lowvig').classList.remove('on');AR.classList.remove('frozen','stop');
   for(const s of ['g','h']){const c=$('#c-'+s);c.querySelector('.rn').textContent='';c.querySelector('.nm').textContent='고르는 중';c.querySelector('.ac').textContent=''}}
 /* ───── 실전 연습: 룬 조합 UI + 실제 룬 대결 규칙 ───── */
-const RG={on:true,S:null,sel:[],busy:false,aiPick:null,msg:'',gen:0,chip:{h:[],g:[]},left:null};
+const RG={on:true,S:null,sel:[],busy:false,aiPick:null,msg:'',gen:0,chip:{h:[],g:[]},left:null,deadline:0,tick:0};
+/* 컴퓨터와 연습도 라운드마다 60초. 화면을 떠나 있는 동안은 시간이 줄지 않아요 */
+setInterval(()=>{const now=Date.now(),dt=now-(RG.tick||now);RG.tick=now;
+  if(A.kind!=='ai'||A.mode!=='play'||!RG.S||RG.S.over||RG.busy||!RG.deadline)return;
+  if(document.hidden){RG.deadline+=dt;return}
+  const left=Math.max(0,Math.ceil((RG.deadline-now)/1000));DUEL.timer(left);
+  if(left===0){RG.deadline=0;RG.sel=[];DUEL.timeUp();rgSubmit([],true)}},250);
 const ECOL={불:'#f0803f',물:'#5aaef0',바람:'#62d6b6',땅:'#c49a64',번개:'#a68aff',나무:'#86cc5c'};
 const GCOL={강화:'#e8a84a','회복·보호':'#8fd6a0',제어:'#8fc8e8',신비:'#c79bff',형태:'#d8c7a0'};
 const runeCol=i=>{const r=RD.D[i];return r[4]==='원소'?ECOL[r[2]]:GCOL[r[4]]};
@@ -1726,7 +1746,7 @@ function padRead(){clearTimeout(PAD.timer);const st=PAD.strokes.filter(s=>s.leng
 
 const netLocked=()=>A.kind==='net'&&!!A.confirmed;
 function roundLabel(){const S=RG.S,el=$('#rc-round');if(!S||!el)return;el.replaceChildren(S.over?'대결 끝':`라운드 ${S.round}`);
-  if(A.kind==='net'&&!S.over&&RG.left!=null&&!RG.busy){const t=mk('span','tl'+(RG.left<=10?' low':''),` · ${RG.left}초`);el.append(t)}}
+  if(A.kind&&!S.over&&RG.left!=null&&!RG.busy){const t=mk('span','tl'+(RG.left<=10?' low':''),` · ${RG.left}초`);el.append(t)}}
 function renderRC(){const S=RG.S;if(!S)return;const p=S.P.h,c=rgCombo(),lock=RG.busy||!!S.over||netLocked();
   $('#rc').classList.toggle('busy',RG.busy);
   roundLabel();paintChips('g');
@@ -1766,20 +1786,20 @@ function renderRC(){const S=RG.S;if(!S)return;const p=S.P.h,c=rgCombo(),lock=RG.
   const wait=netLocked()&&!RG.busy&&!S.over;$('#rc-go').textContent=wait?'대기 중':'확정';
   if(A.kind==='net'&&!RG.busy&&!S.over)$('#rc-status').textContent=wait?(oppReady()?'둘 다 확정했어요. 결과를 기다리는 중이에요.':'확정했어요. 상대를 기다리는 중이에요.'):(oppReady()?'상대는 확정했어요.':'')}
 
-function rgStart(){RG.gen++;RG.busy=false;RG.S=RD.newGame();A.S=RG.S;RG.sel=[];RG.note=null;RG.aiPick=null;RG.left=null;hideTip();padOpen(false);restart();
+function rgStart(){RG.gen++;RG.busy=false;RG.S=RD.newGame();A.S=RG.S;RG.sel=[];RG.note=null;RG.aiPick=null;RG.left=null;RG.deadline=A.kind==='ai'?Date.now()+ROUND_MS:0;hideTip();padOpen(false);restart();
   for(const s of ['h','g']){HP[s]=RG.S.P[s].hp;setHP(s,HP[s]);setChips(s,[])}setField(null);
   $('#r-title').textContent='컴퓨터와 연습';$('#r-log').innerHTML='<li>손패에서 원소 → 효과 → 형태 순서로 룬을 눌러 조합하고 확정하세요. 룬을 꾹 누르면 효과가 보이고, 손패 끝의 각인으로 룬을 그려 넣을 수도 있어요.</li>';
   $('#rc-status').textContent='';renderRC()}
 function startAI(){reroll();F.g.querySelector('.ptag').textContent='컴퓨터';rgStart()}
-async function rgSubmit(c){if(RG.busy||!RG.S||RG.S.over||netLocked())return;const S=RG.S,p=S.P.h;if(c.length&&RD.comboError(c,p))return;
+async function rgSubmit(c,skip){if(RG.busy||!RG.S||RG.S.over||netLocked())return;const S=RG.S,p=S.P.h;if(c.length&&RD.comboError(c,p))return;
   if(A.kind==='net'){A.confirmed=true;RG.note=null;hideTip();padOpen(false);ac();sfx('cast');renderRC();netSubmit(c);return}
-  const gen=RG.gen;RG.busy=true;RG.note=null;hideTip();padOpen(false);ac();renderRC();$('#rc-status').textContent='상대가 조합을 고르는 중이에요…';
+  const gen=RG.gen;RG.busy=true;RG.deadline=0;RG.left=null;if(!skip)RG.note=null;hideTip();padOpen(false);ac();renderRC();$('#rc-status').textContent='상대가 조합을 고르는 중이에요…';
   let ai=RG.aiPick;if(!ai)ai=RD.aiChoose(S.P.g,S.P.h,S.field,S.P.g.foresight?c:null);
-  await sleep(550);const S1=RD.resolve(S,{h:c,g:ai});$('#rc-status').textContent='라운드 결과를 보여 주는 중이에요';
+  await sleep(550);const S1=RD.resolve(S,{h:skip?[]:c,g:ai,skip:{h:!!skip,g:false}});$('#rc-status').textContent='라운드 결과를 보여 주는 중이에요';
   try{await playReal(S1)}catch(e){console.error(e)}
   if(gen!==RG.gen)return;
   RG.S=S1;A.S=S1;RG.sel=[];RG.aiPick=null;if(!S1.over&&S1.P.h.foresight)RG.aiPick=RD.aiChoose(S1.P.g,S1.P.h,S1.field,null);
-  RG.busy=false;$('#rc-status').textContent=S1.over?'':'다음 라운드예요. 새 손패로 조합하세요.';renderRC();
+  RG.busy=false;RG.left=null;RG.deadline=S1.over?0:Date.now()+ROUND_MS;$('#rc-status').textContent=S1.over?'':'다음 라운드예요. 새 손패로 조합하세요.';renderRC();
   if(S1.over)rgEnd(S1)}
 function rgEnd(S){const o=S.over,kind=o.winner==='draw'?'draw':o.winner==='h'?'win':'lose';
   showEnd(kind,(o.reason==='double'?'둘 다 쓰러져서 덜 깎인 쪽을 가렸어요 · ':'')+`나 ${o.reason==='double'?S.P.h.hp:Math.max(0,S.P.h.hp)} : ${o.reason==='double'?S.P.g.hp:Math.max(0,S.P.g.hp)} ${A.kind==='ai'?'컴퓨터':'상대'}`)}
@@ -1787,7 +1807,7 @@ function rgEnd(S){const o=S.over,kind=o.winner==='draw'?'draw':o.winner==='h'?'w
 /* ───── 온라인: 내 자리(방장 h / 손님 g)에서 본 상태로 바꿔 보여 줘요 ───── */
 function viewOf(S,seat){if(!S)return S;const T=JSON.parse(JSON.stringify(S));if(seat!=='g')return T;const o=s=>s==='h'?'g':'h',sw=x=>x&&{h:x.g,g:x.h};
   T.P={h:T.P.g,g:T.P.h};if(T.field&&T.field.by)T.field.by=o(T.field.by);
-  if(T.last){const L=T.last;for(const k of ['play','shown','pw','hp0','hp1'])L[k]=sw(L[k]);L.events=L.events.map(t=>t.replace(/@([hg])/g,(_,s)=>'@'+o(s)))}
+  if(T.last){const L=T.last;for(const k of ['play','shown','pw','hp0','hp1','skip'])L[k]=sw(L[k]);L.events=L.events.map(t=>t.replace(/@([hg])/g,(_,s)=>'@'+o(s)))}
   if(T.over&&T.over.winner!=='draw')T.over.winner=o(T.over.winner);return T}
 /* 지금 보이는 판을 그 상태로 바로 맞춰요 (처음 들어올 때, 다시 들어올 때) */
 function applyLook(){const L=A.meta&&A.meta.look,f=id=>CHARS.find(c=>c.id===id);if(!L||!f(L.h)||!f(L.g)){reroll();return}
@@ -1796,7 +1816,7 @@ function syncTo(V,fresh){RG.gen++;RG.busy=false;hideTip();padOpen(false);if(fres
   RG.S=V;RG.sel=[];RG.note=null;
   for(const s of ['h','g']){HP[s]=V.P[s].hp;setHP(s,HP[s]);setChips(s,chipTexts(V.P[s]).slice(0,2))}setField(V.field);
   if(V.last){showCombosReal(V.last);$('#r-title').textContent=`라운드 ${V.last.round} 결과`;$('#r-log').innerHTML='';(V.last.events.length?V.last.events:['아무 일도 일어나지 않았어요']).forEach(t=>addLog(fillW(t)))}
-  else{$('#r-title').textContent='친구와 대결';$('#r-log').innerHTML='<li>60초 안에 손패로 조합하고 확정하세요. 둘 다 확정하면 결과가 연출로 펼쳐져요. 시간이 지나면 그 라운드는 재정비해요.</li>'}
+  else{$('#r-title').textContent='친구와 대결';$('#r-log').innerHTML='<li>60초 안에 손패로 조합하고 확정하세요. 둘 다 확정하면 결과가 연출로 펼쳐져요. 시간이 지나면 그 라운드는 아무것도 하지 않고 넘어가요.</li>'}
   for(const s of ['h','g'])if(V.P[s].hp<=0&&V.over){F[s].querySelector('.hp').style.visibility='hidden';F[s].classList.add('ko');sprDie(s,other(s))}
   $('#rc-status').textContent='';renderRC();if(V.over)rgEnd(V)}
 let NQ=null,NBUSY=false;
@@ -1815,10 +1835,10 @@ window.DUEL={
   shown(){layout(true)},
   subs(){if(RG.S){paintChips('g');if(!RG.busy)renderRC()}},
   timer(left){if(RG.left===left)return;RG.left=left;roundLabel()},
-  timeUp(){padOpen(false);renderRC();rcNote('시간이 지나 이번 라운드는 재정비해요')},
+  timeUp(){padOpen(false);renderRC();rcNote('시간이 지나 이번 라운드는 그냥 넘어가요')},
   unlock(msg){renderRC();rcNote(msg)},
   note(msg){rcNote(msg)},
-  reset(){RG.gen++;RG.busy=false;RG.S=null;RG.sel=[];RG.left=null;NQ=null;hideTip();padOpen(false);OV.querySelectorAll('.endov').forEach(e=>e.remove())}
+  reset(){RG.gen++;RG.busy=false;RG.S=null;RG.sel=[];RG.left=null;RG.deadline=0;NQ=null;hideTip();padOpen(false);OV.querySelectorAll('.endov').forEach(e=>e.remove())}
 };
 
 /* 이벤트 문장을 연출용 정보로 */
@@ -1867,8 +1887,8 @@ async function castOnly(s,c){const ring=groundCircle(s,'방어');sprCast(s,'#e0b
 async function rKO(who){const f=F[who],hp=f.querySelector('.hp').getBoundingClientRect(),a=AR.getBoundingClientRect();sfx('ko');shake(10,600);
   for(let i=0;i<34;i++)part({k:'shard',x:hp.left-a.left+Math.random()*hp.width,y:hp.top-a.top+hp.height/2,vx:rnd(-120,120),vy:rnd(-200,-40),g:700,drag:.97,life:rnd(.6,1.1),r:rnd(2,4),rot:rnd(0,6),vr:rnd(-12,12),c:i%3?'#f07a82':'#f4e6c8'});
   f.querySelector('.hp').style.visibility='hidden';f.classList.add('ko');sprDie(who,other(who))}
-function showCombosReal(L){for(const s of ['g','h']){const c=$('#c-'+s),pl=L.play[s],sh=L.shown[s];c.querySelector('.rn').replaceChildren(...pl.map(i=>{const b=mk('b',null,RD.D[i][0]);b.style.setProperty('--c',runeCol(i));return b}));c.querySelector('.nm').textContent=RD.nameOf(pl);
-  c.querySelector('.ac').textContent=('· '+(pl.length?`${RD.actionOf(sh)} · 위력 ${Math.round(L.pw[s])}`:`체력 ${RD.REST_HEAL} 회복 · 다음 손패 8개`)).replace(/ (\d)/g,'\u00a0$1');c.classList.remove('flip');void c.offsetWidth;c.classList.add('flip')}}
+function showCombosReal(L){for(const s of ['g','h']){const c=$('#c-'+s),pl=L.play[s],sh=L.shown[s];c.querySelector('.rn').replaceChildren(...pl.map(i=>{const b=mk('b',null,RD.D[i][0]);b.style.setProperty('--c',runeCol(i));return b}));const sk=!pl.length&&L.skip&&L.skip[s];c.querySelector('.nm').textContent=sk?'시간 초과':RD.nameOf(pl);
+  c.querySelector('.ac').textContent=('· '+(pl.length?`${RD.actionOf(sh)} · 위력 ${Math.round(L.pw[s])}`:sk?'아무것도 하지 못했어요':`체력 ${RD.REST_HEAL} 회복 · 다음 손패 8개`)).replace(/ (\d)/g,'\u00a0$1');c.classList.remove('flip');void c.offsetWidth;c.classList.add('flip')}}
 async function playReal(S1){const L=S1.last,C=L.shown,C0=L.play,ev=parseEv(L.events);
   showCombosReal(L);$('#r-title').textContent=`라운드 ${L.round} 결과`;$('#r-log').innerHTML='';(L.events.length?L.events:['아무 일도 일어나지 않았어요']).forEach(t=>addLog(fillW(t)));
   HP.h=L.hp0.h;HP.g=L.hp0.g;for(const s of ['h','g'])if(F[s].querySelector('.chips').textContent.includes('재정비'))chips(s,[]);
@@ -1916,7 +1936,7 @@ const toggleSound=()=>{ST.sound=!ST.sound;save();syncBtns();if(ST.sound){ac();sf
 const toggleVib=()=>{ST.vib=!ST.vib;save();syncBtns();if(ST.vib)vib([40])};
 document.querySelectorAll('[data-set]').forEach(b=>b.onclick=()=>{const k=b.dataset.set;if(k==='speed'){ST.speed=+b.dataset.v===2?2:1;save();syncBtns()}else if(k==='sound')toggleSound();else if(k==='vib')toggleVib()});
 syncBtns();reroll();setHP('h',100);setHP('g',100);
-window.__duel={RG,ST,HP,FX,SPR,padOpen,padRead,PAD,rgSubmit,rgCombo,renderRC,setField,viewOf,get pick(){return pick}};
+window.__duel={setBg(k){setPick(pick.h,pick.g,k)},RG,ST,HP,FX,SPR,padOpen,padRead,PAD,rgSubmit,rgCombo,renderRC,setField,viewOf,get pick(){return pick}};
 })();
 </script>
 </body>
