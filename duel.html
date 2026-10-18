@@ -66,7 +66,7 @@ button:focus-visible,input:focus-visible,canvas:focus-visible{outline:2px solid 
 .setp .note{margin:0}
 .wait-set{border-top:1px solid var(--line);padding-top:12px}
 /* 대결 화면: 넓게 쓰고, 어두운 결투장 */
-body.playing .wrap{max-width:1180px}
+body.playing .wrap{max-width:1320px}
 body.playing .top .sub{display:none}
 @media (max-width:719px){body.playing .wrap{padding-top:8px}body.playing h1{font-size:21px;margin:0}body.playing .links{font-size:13px}
   #v-play{margin-top:8px;gap:10px}#v-play .bar{flex-wrap:nowrap}#v-play .bar .who{display:none}}
@@ -463,6 +463,7 @@ body.playing .top .sub{display:none}
 #v-play .log h2{font:700 15px/1.3 var(--f-title);margin:0 0 4px;color:var(--gold2)}
 #v-play .log ol{margin:0;padding-left:18px;color:#d7dbe3;font-size:14px}
 #v-play .log li{margin:1px 0}
+#v-play .log.sr-only{position:absolute!important;width:1px!important;height:1px!important;min-height:0;padding:0!important;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 @media (prefers-reduced-motion:reduce){#v-play .pwrap.idle,#v-play .lowvig.on,#v-play .bg-glow,#v-play .bg-flame,#v-play .bg-tw,#v-play .bg-win{animation:none}}
 /* 대결 화면 틀 */
 #v-play{display:grid;gap:12px;margin-top:12px;color:var(--ink);font:500 15px/1.55 var(--f-body)}
@@ -472,6 +473,50 @@ body.playing .top .sub{display:none}
 #v-play .rc-round .tl{font-variant-numeric:tabular-nums;color:#dfe4ec}
 #v-play .rc-round .tl.low{color:#ff8f96}
 #v-play .chip.ready{border-color:#8fd6a0;color:#cfeedd;background:rgba(20,40,28,.75)}
+/* PC: 결투장 UI를 크게 (휴대폰은 그대로) */
+#v-play .arena.real.wide{--sh:450px}
+@media (min-width:1360px){#v-play .arena.real.wide{--sh:490px}}
+#v-play .arena.wide .hudp{width:min(29%,340px);gap:5px;padding:9px 14px 9px;border-radius:12px}
+#v-play .arena.wide #f-g .hudp,#v-play .arena.wide #f-h .hudp{top:26px}
+#v-play .arena.wide .pname{font-size:18px}
+#v-play .arena.wide .ptag{font-size:12.5px;padding:2px 9px}
+#v-play .arena.wide .hpnum{font-size:15px}
+#v-play .arena.wide .hp{height:13px;border-radius:7px}
+#v-play .arena.wide .chip{font-size:12.5px;padding:1px 9px}
+#v-play .arena.wide .hudp .combo{padding-top:6px}
+#v-play .arena.wide .hudp .combo .rn{font-size:19px}
+#v-play .arena.wide .hudp .combo .cline{font-size:14.5px}
+#v-play .arena.wide .hudp .combo .ac{font-size:13px}
+#v-play .arena.wide .rc-round{font-size:24px;top:calc(32px - var(--sh))}
+#v-play .arena.wide .rc-status{font-size:15px;top:calc(76px - var(--sh))}
+#v-play .arena.real.wide .fieldpill{top:106px;font-size:14px;padding:4px 14px}
+#v-play .arena.wide .rc{gap:11px;padding:8px 28px 28px}
+#v-play .arena.wide .rc-prev{width:min(46%,580px);gap:4px}
+#v-play .arena.wide .rc-gl{font-size:44px;gap:2px 12px}
+#v-play .arena.wide .rc-name{font-size:28px}
+#v-play .arena.wide .rc-name.dim{font-size:20px}
+#v-play .arena.wide .rc-act{font-size:14px;padding:3px 12px}
+#v-play .arena.wide .rc-meta{font-size:16px}
+#v-play .arena.wide .rc-err{font-size:15.5px}
+#v-play .arena.wide .rc-note .rc-err{padding:4px 14px}
+#v-play .arena.wide .rc-hand{grid-template-columns:repeat(var(--n,7),minmax(0,104px));gap:9px;padding-top:6px}
+#v-play .arena.wide .rcard{min-height:118px;border-radius:10px;gap:4px;padding:24px 2px 11px;font-size:16px}
+#v-play .arena.wide .rcard .cat{font-size:12.5px;left:8px;top:6px}
+#v-play .arena.wide .rcard .ord{min-width:22px;height:22px;font-size:13px;line-height:22px;right:6px;top:6px}
+#v-play .arena.wide .rcard .gl{font-size:40px}
+#v-play .arena.wide .rcard::before{height:3px}
+#v-play .arena.wide .rc-acts{gap:11px}
+#v-play .arena.wide .rc-acts .btn{min-height:56px;font-size:17px;border-radius:12px}
+#v-play .arena.wide #pad{width:216px;height:216px}
+#v-play .arena.real.wide .rp-box{top:43%}
+#v-play .arena.wide .rp-box{grid-template-columns:112px auto 112px}
+#v-play .arena.wide .rp-side{width:112px;gap:9px;left:calc(50% + 124px);top:30px}
+#v-play .arena.wide .rp-side .btn{min-height:46px;font-size:15.5px}
+#v-play .arena.wide .rp-res{font-size:15.5px;max-width:520px}
+#v-play .arena.wide .rp-res .alt{font-size:14px;padding:4px 11px}
+#v-play .arena.wide .rp-res .alt b{font-size:19px}
+@media (min-width:720px){.rtip{font-size:15px;max-width:320px;padding:11px 14px 12px}.rt-g{font-size:30px}.rt-n{font-size:18px}.rt-c{font-size:12.5px}}
+#v-play .bar .who{font-size:14px}
 
 </style>
 </head>
@@ -499,11 +544,11 @@ body.playing .top .sub{display:none}
     <div class="panel stack setp" aria-labelledby="set-title">
       <h2 id="set-title">대결 설정</h2>
       <div class="setrows">
-        <div class="setrow"><b>연출 속도</b><div class="seg" role="group" aria-label="연출 속도"><button class="btn sm" type="button" data-set="speed" data-v="1">보통</button><button class="btn sm" type="button" data-set="speed" data-v="2">빠르게</button></div></div>
+        <div class="setrow"><b>연출 속도</b><div class="seg" role="group" aria-label="연출 속도"><button class="btn sm" type="button" data-set="speed" data-v="1">1배</button><button class="btn sm" type="button" data-set="speed" data-v="2">2배</button></div></div>
         <div class="setrow"><b>소리</b><button class="btn sm tog" type="button" data-set="sound" aria-pressed="true">켜짐</button></div>
         <div class="setrow"><b>진동</b><button class="btn sm tog" type="button" data-set="vib" aria-pressed="true">켜짐</button></div>
       </div>
-      <p class="note">속도는 대결을 시작하기 전에 정해요. 소리와 진동은 대결 중에도 위쪽 버튼으로 켜고 끌 수 있어요. 진동은 안드로이드 휴대폰에서만 느껴져요.</p>
+      <p class="note">연출 속도, 소리, 진동은 대결을 시작하기 전에 정해요. 진동은 안드로이드 휴대폰에서만 느껴져요.</p>
     </div>
   </section>
 
@@ -515,7 +560,7 @@ body.playing .top .sub{display:none}
       <p class="wait" id="w-status"></p>
       <div class="row"><button class="btn main" id="b-start" type="button" hidden>시작</button><button class="btn" id="b-leave1" type="button">방 나가기</button></div>
       <div class="setrows wait-set" aria-label="대결 설정">
-        <div class="setrow"><b>연출 속도</b><div class="seg" role="group" aria-label="연출 속도"><button class="btn sm" type="button" data-set="speed" data-v="1">보통</button><button class="btn sm" type="button" data-set="speed" data-v="2">빠르게</button></div></div>
+        <div class="setrow"><b>연출 속도</b><div class="seg" role="group" aria-label="연출 속도"><button class="btn sm" type="button" data-set="speed" data-v="1">1배</button><button class="btn sm" type="button" data-set="speed" data-v="2">2배</button></div></div>
         <div class="setrow"><b>소리</b><button class="btn sm tog" type="button" data-set="sound" aria-pressed="true">켜짐</button></div>
         <div class="setrow"><b>진동</b><button class="btn sm tog" type="button" data-set="vib" aria-pressed="true">켜짐</button></div>
       </div>
@@ -524,8 +569,6 @@ body.playing .top .sub{display:none}
 
   <section id="v-play" hidden>
     <div class="bar">
-      <button class="btn" id="b-sound" type="button" aria-pressed="true">소리<span class="k" id="k-sound">켜짐</span></button>
-      <button class="btn" id="b-vib" type="button" aria-pressed="true">진동<span class="k" id="k-vib">켜짐</span></button>
       <span class="spacer"></span>
       <span class="who" id="who"></span>
       <button class="btn warn" id="b-leave2" type="button">대결 나가기</button>
@@ -559,7 +602,7 @@ body.playing .top .sub{display:none}
       <div class="rc-acts"><button class="btn" id="rc-undo" type="button">되돌리기</button><button class="btn" id="rc-clear" type="button">비우기</button><button class="btn" id="rc-pass" type="button">재정비</button><button class="btn main" id="rc-go" type="button">확정</button></div>
     </section>
   </div>
-    <div class="log" aria-live="polite"><h2 id="r-title">대결</h2><ol id="r-log"></ol></div>
+    <div class="log sr-only" aria-live="polite"><h2 id="r-title">대결</h2><ol id="r-log"></ol></div>
   </section>
 </div>
 
@@ -1864,14 +1907,13 @@ $('#rc-clear').onclick=()=>{if(RG.busy||netLocked())return;RG.sel=[];RG.note=nul
 $('#rc-pass').onclick=()=>rgSubmit([]);
 $('#rc-go').onclick=()=>{if(!RG.S||RG.busy||netLocked())return;const c=rgCombo(),e=c.length?RD.comboError(c,RG.S.P.h):null;if(e){ac();rcNote(e);return}rgSubmit(c)};
 
-/* ───── 설정: 속도(시작 전), 소리·진동(언제든) ───── */
-function syncBtns(){$('#b-sound').setAttribute('aria-pressed',ST.sound);$('#k-sound').textContent=ST.sound?'켜짐':'꺼짐';$('#b-vib').setAttribute('aria-pressed',ST.vib);$('#k-vib').textContent=ST.vib?'켜짐':'꺼짐';
+/* ───── 설정: 속도·소리·진동 (시작 전에 정해요) ───── */
+function syncBtns(){
   document.querySelectorAll('[data-set="speed"]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.v===ST.speed)));
   document.querySelectorAll('[data-set="sound"]').forEach(b=>{b.setAttribute('aria-pressed',String(ST.sound));b.textContent=ST.sound?'켜짐':'꺼짐'});
   document.querySelectorAll('[data-set="vib"]').forEach(b=>{b.setAttribute('aria-pressed',String(ST.vib));b.textContent=ST.vib?'켜짐':'꺼짐'})}
 const toggleSound=()=>{ST.sound=!ST.sound;save();syncBtns();if(ST.sound){ac();sfx('heal')}};
 const toggleVib=()=>{ST.vib=!ST.vib;save();syncBtns();if(ST.vib)vib([40])};
-$('#b-sound').onclick=toggleSound;$('#b-vib').onclick=toggleVib;
 document.querySelectorAll('[data-set]').forEach(b=>b.onclick=()=>{const k=b.dataset.set;if(k==='speed'){ST.speed=+b.dataset.v===2?2:1;save();syncBtns()}else if(k==='sound')toggleSound();else if(k==='vib')toggleVib()});
 syncBtns();reroll();setHP('h',100);setHP('g',100);
 window.__duel={RG,ST,HP,FX,SPR,padOpen,padRead,PAD,rgSubmit,rgCombo,renderRC,setField,viewOf,get pick(){return pick}};
