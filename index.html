@@ -44,9 +44,9 @@ input:focus-visible,button:focus-visible{outline:2px solid var(--ef);outline-off
 .tile{display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-left:6px solid var(--c);border-radius:10px;padding:10px 12px;color:var(--ink);font:inherit;cursor:pointer}
 .tile:active{background:var(--line)}
 .tile[data-c="원소"]{--c:var(--el)}
-.tile[data-c="효과"]{--c:var(--ef)}
-.tile[data-c="형태"]{--c:var(--fo)}
-.tile[data-g="강화"]{--c:var(--buf)}.tile[data-g="회복·보호"]{--c:var(--heal)}.tile[data-g="제어"]{--c:var(--ctl)}.tile[data-g="신비"]{--c:var(--mys)}
+.tile[data-c="술식"]{--c:var(--ef)}
+.tile[data-c="발현"]{--c:var(--fo)}
+.tile[data-g="증강"]{--c:var(--buf)}.tile[data-g="가호"]{--c:var(--heal)}.tile[data-g="지배"]{--c:var(--ctl)}.tile[data-g="비술"]{--c:var(--mys)}
 .h{display:flex;justify-content:space-between;align-items:flex-start;gap:6px}
 .g{font:400 40px/1.1 'Noto Sans Runic','Segoe UI Historic','Segoe UI Symbol',sans-serif;color:var(--rune)}
 .t{font-size:12px;color:var(--c);font-weight:700;padding-top:4px}
@@ -146,16 +146,16 @@ textarea:focus-visible{outline:2px solid var(--ef);outline-offset:2px}
 .wref summary{cursor:pointer;color:var(--mute);font-size:14px}
 .wgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px}
 .wcat{font-size:13px;font-weight:700;margin:12px 0 6px}
-.wcat[data-c="원소"]{color:var(--el)}.wcat[data-c="효과"]{color:var(--ef)}.wcat[data-c="형태"]{color:var(--fo)}
-.wgrid div[data-c="원소"]{border-left:3px solid var(--el)}.wgrid div[data-c="효과"]{border-left:3px solid var(--ef)}.wgrid div[data-c="형태"]{border-left:3px solid var(--fo)}
-.wgrid div[data-g="강화"]{border-left-color:var(--buf)}.wgrid div[data-g="회복·보호"]{border-left-color:var(--heal)}.wgrid div[data-g="제어"]{border-left-color:var(--ctl)}.wgrid div[data-g="신비"]{border-left-color:var(--mys)}
+.wcat[data-c="원소"]{color:var(--el)}.wcat[data-c="술식"]{color:var(--ef)}.wcat[data-c="발현"]{color:var(--fo)}
+.wgrid div[data-c="원소"]{border-left:3px solid var(--el)}.wgrid div[data-c="술식"]{border-left:3px solid var(--ef)}.wgrid div[data-c="발현"]{border-left:3px solid var(--fo)}
+.wgrid div[data-g="증강"]{border-left-color:var(--buf)}.wgrid div[data-g="가호"]{border-left-color:var(--heal)}.wgrid div[data-g="지배"]{border-left-color:var(--ctl)}.wgrid div[data-g="비술"]{border-left-color:var(--mys)}
 .wgrid div{background:var(--card);border:1px solid var(--line);border-radius:8px;text-align:center;padding:4px 2px;font-size:12px;color:var(--mute)}
 .wgrid b{display:block;font:400 26px/1.2 'Noto Sans Runic','Segoe UI Historic','Segoe UI Symbol',sans-serif;color:var(--rune)}
 </style>
 </head>
 <body>
 <div class="titlebar"><h1>룬 사전</h1><a class="playbtn" id="playbtn" href="duel.html" target="_blank">룬 대결 하기</a></div>
-<p class="sub">룬을 원소 → 효과 → 형태 순서로 눌러 조합하면 능력이 나오고, 기록한 조합은 도감에 모여요. 룬을 길게 누르면 실제 뜻과 역사를 볼 수 있어요.</p>
+<p class="sub">룬을 원소 → 술식 → 발현 순서로 눌러 조합하면 능력이 나오고, 기록한 조합은 도감에 모여요. 룬을 길게 누르면 실제 뜻과 역사를 볼 수 있어요.</p>
 <div class="tabs" role="tablist">
 <button class="tab" role="tab" id="t-dict" aria-selected="true">사전</button>
 <button class="tab" role="tab" id="t-write" aria-selected="false">각인</button>
@@ -212,31 +212,31 @@ const D=[
 ['ᛠ','에아르','땅','원소','','흙·무덤'],
 ['ᚸ','가르','번개','원소','','창'],
 ['ᚪ','아크','나무','원소','','참나무'],
-['ᚢ','우루즈','원초적 힘','효과','강화','들소'],
-['ᛞ','다가즈','각성','효과','강화','낮·하루'],
-['ᚠ','페후','증폭','효과','강화','재물'],
-['ᛏ','티와즈','맹세','효과','강화','전쟁의 신'],
-['ᛒ','베르카나','성장','효과','강화','자작나무'],
-['ᛜ','잉와즈','잠재력','효과','강화','풍요의 신'],
-['ᚹ','우은조','치유','효과','회복·보호','기쁨'],
-['ᛇ','에이와즈','부활','효과','회복·보호','주목나무'],
-['ᛊ','소윌로','정화','효과','회복·보호','태양'],
-['ᛉ','알기즈','수호','효과','회복·보호','엘크·사초'],
-['ᛁ','이사','정지','효과','제어','얼음'],
-['ᚾ','나우티즈','속박','효과','제어','필요'],
-['ᛃ','예라','흡수','효과','제어','수확'],
-['ᚷ','게보','계약','효과','제어','선물'],
-['ᛗ','만나즈','정신','효과','신비','인간'],
-['ᚨ','안수즈','예언','효과','신비','신'],
-['ᛈ','페르트','변환','효과','신비','뜻 미상(놀이?)'],
-['ᚱ','라이도','이동','효과','신비','여행'],
-['ᚺ','하갈라즈','재앙','형태','','우박'],
-['ᛖ','에와즈','소환','형태','','말'],
-['ᛟ','오달라','영역','형태','','유산'],
-['ᚦ','투리사즈','방어','형태','','거인'],
-['ᛚ','라구즈','환영','형태','','물']
+['ᚢ','우루즈','원초적 힘','술식','증강','들소'],
+['ᛞ','다가즈','각성','술식','증강','낮·하루'],
+['ᚠ','페후','증폭','술식','증강','재물'],
+['ᛏ','티와즈','맹세','술식','증강','전쟁의 신'],
+['ᛒ','베르카나','성장','술식','증강','자작나무'],
+['ᛜ','잉와즈','잠재력','술식','증강','풍요의 신'],
+['ᚹ','우은조','치유','술식','가호','기쁨'],
+['ᛇ','에이와즈','부활','술식','가호','주목나무'],
+['ᛊ','소윌로','정화','술식','가호','태양'],
+['ᛉ','알기즈','수호','술식','가호','엘크·사초'],
+['ᛁ','이사','정지','술식','지배','얼음'],
+['ᚾ','나우티즈','속박','술식','지배','필요'],
+['ᛃ','예라','흡수','술식','지배','수확'],
+['ᚷ','게보','계약','술식','증강','선물'],
+['ᛗ','만나즈','정신','술식','비술','인간'],
+['ᚨ','안수즈','예언','술식','비술','신'],
+['ᛈ','페르트','변환','술식','비술','뜻 미상(놀이?)'],
+['ᚱ','라이도','이동','술식','가호','여행'],
+['ᚺ','하갈라즈','재앙','발현','','우박'],
+['ᛖ','에와즈','소환','발현','','말'],
+['ᛟ','오달라','영역','발현','','유산'],
+['ᚦ','투리사즈','방어','발현','','거인'],
+['ᛚ','라구즈','환영','발현','','물']
 ];
-/* 룬 조합 이름 (짧게): [꾸밈말 하나] [원소 낱말] [형태 낱말] */
+/* 룬 조합 이름 (짧게): [꾸밈말 하나] [원소 낱말] [발현 낱말] */
 const NM=(()=>{
 const E=['불','물','바람','땅','번개','나무'];
 /* 원소 낱말: 원소 1~3개 조합 83가지 (순서 무관) */
@@ -260,16 +260,16 @@ const CORE={
 '물바람땅':'흙비','물바람번개':'뇌우','물바람나무':'꽃비',
 '물땅번개':'번개늪','물땅나무':'습지','물번개나무':'번개이슬',
 '바람땅번개':'모래뇌운','바람땅나무':'초원','바람번개나무':'천둥숲','땅번개나무':'번개산'};
-/* 효과: [꾸밈말, 두 개 겹쳤을 때 꾸밈말, 원소 없을 때 쓰는 낱말] */
+/* 술식: [꾸밈말, 두 개 겹쳤을 때 꾸밈말, 원소 없을 때 쓰는 낱말] */
 const EF={
 '원초적 힘':['사나운','광포한','야성'],'각성':['깨어난','초월한','각성'],'증폭':['거대한','극대한','증폭'],'맹세':['고결한','숭고한','서약'],
 '성장':['자라나는','무성한','생장'],'잠재력':['잠든','무한한','잠재'],'치유':['따스한','자애로운','치유'],'부활':['되살아난','불멸의','부활'],
 '정화':['성스러운','순결한','정화'],'수호':['굳건한','철벽의','가호'],'정지':['멈춰진','영겁의','정지'],'속박':['얽매인','결박된','속박'],
 '흡수':['굶주린','탐욕스러운','흡수'],'계약':['맺어진','혈맹의','계약'],'정신':['고요한','초연한','정신'],'예언':['예견된','운명의','예언'],
 '변환':['뒤틀린','변화무쌍한','변환'],'이동':['질주하는','신출귀몰한','도약']};
-/* 효과가 둘이면 원소가 있을 때는 하나만 꾸밈말로: 이 순서로 앞선 것 */
+/* 술식이 둘이면 원소가 있을 때는 하나만 꾸밈말로: 이 순서로 앞선 것 */
 const PRI=['원초적 힘','부활','정지','변환','계약','흡수','속박','정신','예언','수호','치유','정화','맹세','이동','각성','잠재력','성장','증폭'];
-/* 형태 낱말: [원소가 있을 때, 원소가 없을 때, 형태만 있을 때] */
+/* 발현 낱말: [원소가 있을 때, 원소가 없을 때, 발현만 있을 때] */
 const FO={'재앙':['재앙','재앙','재앙'],'소환':['정령','정령','정령 소환'],'영역':['지대','결계','영역 선포'],'방어':['방벽','방벽','방벽'],'환영':['분신','분신','환영']};
 return function(kws){
   if(!kws.length)return '재정비';
@@ -290,13 +290,13 @@ return function(kws){
 const GRADE=['','기초','일반','고급','희귀','전설'];
 const KW=D.map(r=>r[2]);
 /* 규칙: 분류별 개수 제한, 룬 점수, 등급 구간, 반대 룬(폭주), 원소 상성 */
-const LIMIT={원소:3,효과:2,형태:1};
-/* 위력 = 기본 위력(원소 1개당 10, 원소가 없으면 5) × 효과 1개마다 1.5 × 형태가 있으면 2 */
+const LIMIT={원소:3,술식:2,발현:1};
+/* 위력 = 기본 위력(원소 1개당 10, 원소가 없으면 5) × 술식 1개마다 1.5 × 발현이 있으면 2 */
 const BASE=10,NOEL=5,MUL_EF=1.5,MUL_FO=2;
-function power(ix){const c=t=>ix.filter(i=>D[i][3]===t).length,e=c('원소');return (e?BASE*e:NOEL)*MUL_EF**c('효과')*MUL_FO**c('형태')}
+function power(ix){const c=t=>ix.filter(i=>D[i][3]===t).length,e=c('원소');return (e?BASE*e:NOEL)*MUL_EF**c('술식')*MUL_FO**c('발현')}
 const pw=ix=>Math.round(power(ix));
 const GCUT=[15,30,45,67.5],GRANGE=['','15 이하','20~30','40~45','60~68','90'];
-const TOTAL_VALID=47879; /* 개수 제한(원소 3·효과 2·형태 1, 총 5개)을 지키는 조합 수 (순서 무관, 같은 룬 중복 허용) */
+const TOTAL_VALID=47879; /* 개수 제한(원소 3·술식 2·발현 1, 총 5개)을 지키는 조합 수 (순서 무관, 같은 룬 중복 허용) */
 function gradeOf(ix){const s=power(ix),g=GCUT.findIndex(t=>s<=t);return g<0?5:g+1}
 const OPP=[['치유','재앙'],['수호','재앙'],['정지','이동'],['성장','정지'],['각성','속박'],['원초적 힘','정신'],['치유','흡수'],['맹세','변환']];
 const CLASH=[[['불','물'],'불과 물은 상극이라 부딪히면 증기 폭발이 일어나요.'],[['바람','불'],'바람이 불을 키워 위력이 커져요.'],[['물','번개'],'물이 번개의 위력을 높여요.'],[['땅','물'],'땅이 물을 빨아들여 물의 힘이 약해져요.'],[['나무','불'],'나무는 불에 약해 쉽게 타버려요.'],[['나무','물'],'나무는 물을 머금어 더 잘 자라요.'],[['나무','땅'],'나무는 땅에 뿌리내려 더 잘 자라요.']];
@@ -305,7 +305,7 @@ const rune=k=>D[KW.indexOf(k)][0];
 function oppOf(ix){const n=ix.map(i=>KW[i]);return OPP.filter(p=>n.includes(p[0])&&n.includes(p[1]))}
 function failOf(ix){
   const bi=ix.findIndex((v,i)=>i&&RK[D[v][3]]<RK[D[ix[i-1]][3]]);
-  if(bi>0){const a=D[ix[bi-1]],b=D[ix[bi]];return [a[0]+' '+a[2]+'('+a[3]+') 뒤에 '+b[0]+' '+b[2]+'('+b[3]+')가 와서 마력이 흩어졌어요.','룬은 원소 → 효과 → 형태 순서로 놓아야 해요. 되돌리기로 마지막 룬을 빼거나 다시 쌓아 보세요.']}
+  if(bi>0){const a=D[ix[bi-1]],b=D[ix[bi]];return [a[0]+' '+a[2]+'('+a[3]+') 뒤에 '+b[0]+' '+b[2]+'('+b[3]+')가 와서 마력이 흩어졌어요.','룬은 원소 → 술식 → 발현 순서로 놓아야 해요. 되돌리기로 마지막 룬을 빼거나 다시 쌓아 보세요.']}
   for(const c in LIMIT){
     const n=ix.filter(i=>D[i][3]===c).length;
     if(n>LIMIT[c])return [c+' 룬이 '+n+'개라 마력이 버티지 못하고 흩어졌어요.',c+' 룬은 '+LIMIT[c]+'개까지만 넣을 수 있어요. 되돌리기로 마지막 룬을 빼 보세요.'];
@@ -320,7 +320,7 @@ const FN={재앙:'재앙',소환:'소환체',영역:'영역',방어:'방벽',환
 function josa(w){const c=w.charCodeAt(w.length-1)-44032;return c>=0&&c%28!==0&&c%28!==8?'으로':'로'}
 function describe(ix){
   const R=ix.map(i=>D[i]);
-  const els=R.filter(r=>r[3]==='원소').map(r=>r[2]),efs=R.filter(r=>r[3]==='효과').map(r=>r[2]),fos=R.filter(r=>r[3]==='형태').map(r=>r[2]);
+  const els=R.filter(r=>r[3]==='원소').map(r=>r[2]),efs=R.filter(r=>r[3]==='술식').map(r=>r[2]),fos=R.filter(r=>r[3]==='발현').map(r=>r[2]);
   const subj=els.length?[...new Set(els)].map(k=>EL[k]).join('·')+'의 힘이':'순수한 마력이';
   const mid=efs.length?[...new Set(efs)].map(k=>EF[k]).join(', ')+', ':'';
   const fj=[...new Set(fos)].map(k=>FN[k]).join('·');
@@ -332,7 +332,9 @@ function notes(ix){
   if(new Set(names).size<names.length)o.push(['같은 룬이 겹쳐 위력이 강해지지만 마력 소모도 커져요.']);
   return o;
 }
-const RK={원소:0,효과:1,형태:2};
+const RK={원소:0,술식:1,발현:2};
+/* 보여 주는 순서: 원소 → 술식(증강·가호·지배·비술) → 발현. 룬 번호(D의 순서)는 그대로 둬요 */
+const GORD={증강:1,가호:2,지배:3,비술:4},VORD=(r,i)=>RK[r[3]]*1000+(GORD[r[4]]||0)*100+i;
 /* 실제 룬 정보: [원래 이름, 소리, 실제 뜻, 체계와 위치, 이야기] */
 const EF24='엘더 푸타르크',AS='앵글로색슨 푸소르크';
 const INFO={
@@ -392,13 +394,13 @@ function chips(box,items,get,set){
   });
 }
 function build(){
-  chips($('#cats'),['전체','원소','효과','형태'],()=>cat,n=>{cat=n;sub='전체'});
-  $('#subs').classList.toggle('on',cat==='효과');
-  chips($('#subs'),['전체','강화','회복·보호','제어','신비'],()=>sub,n=>{sub=n});
+  chips($('#cats'),['전체','원소','술식','발현'],()=>cat,n=>{cat=n;sub='전체'});
+  $('#subs').classList.toggle('on',cat==='술식');
+  chips($('#subs'),['전체','증강','가호','지배','비술'],()=>sub,n=>{sub=n});
 }
 function render(){
   const g=$('#grid');g.replaceChildren();
-  const list=D.map((r,i)=>[r,i]).filter(([r])=>(cat==='전체'||r[3]===cat)&&(sub==='전체'||r[4]===sub)&&(!q||(r[0]+r[1]+r[2]+r[5]).includes(q)));
+  const list=D.map((r,i)=>[r,i]).filter(([r])=>(cat==='전체'||r[3]===cat)&&(sub==='전체'||r[4]===sub)&&(!q||(r[0]+r[1]+r[2]+r[5]).includes(q))).sort((a,b)=>VORD(...a)-VORD(...b));
   $('#cnt').textContent=list.length+'개의 룬';
   if(!list.length){g.append(el('p','empty','일치하는 룬이 없어요. 키워드나 이름으로 다시 검색해 보세요.'));return}
   list.forEach(([r,i])=>{
@@ -423,7 +425,7 @@ function tray(full){
   $('.tray').hidden=!T.length; /* 조합 칸은 룬을 넣었을 때만 보여요 */
   $('#tg').textContent=T.map(i=>D[i][0]).join('');
   $('#tr').textContent=T.length?T.map(i=>KW[i]).join(' + '):(tab==='write'?'룬을 그려 조합해 보세요':'룬을 눌러 조합해 보세요');
-  $('#hint').textContent=full?'최대 5개까지 쌓을 수 있어요':(T.length?T.map(i=>D[i][1]).join(', '):'원소, 효과, 형태 순서로 고르면 돼요');
+  $('#hint').textContent=full?'최대 5개까지 쌓을 수 있어요':(T.length?T.map(i=>D[i][1]).join(', '):'원소, 술식, 발현 순서로 고르면 돼요');
   if(!T.length){ab.hidden=true;rec.disabled=true;rec.textContent='도감에 기록';return}
   ab.hidden=false;ab.replaceChildren();
   const fail=failOf(T);
@@ -592,13 +594,13 @@ function renderRules(){
   const p=t=>el('p',null,t);
   const ul=items=>{const u=el('ul');items.forEach(t=>u.append(el('li',null,t)));return u};
   const rk=k=>rune(k)+' '+k;
-  card('조합 순서',p('룬은 원소 → 효과 → 형태 순서로 놓아요. 같은 분류 안에서는 순서가 자유로워요. 순서가 어긋나면 조합에 실패해요.'));
-  card('룬 개수',ul(Object.entries(LIMIT).map(([c,n])=>c+' 룬은 '+n+'개까지')),p('한 번에 최대 5개까지 쌓을 수 있어서, 원소를 3개 넣으면 효과와 형태는 합쳐서 2개까지예요. 같은 룬을 두 번 넣어도 개수에 들어가요(예: 불 + 불). 개수를 넘기면 조합에 실패해요.'));
-  card('원소 없는 조합',p('효과와 형태 룬만으로도 조합할 수 있어요. 이때는 순수한 마력으로 발현돼요.'));
+  card('조합 순서',p('룬은 원소 → 술식 → 발현 순서로 놓아요. 같은 분류 안에서는 순서가 자유로워요. 순서가 어긋나면 조합에 실패해요.'));
+  card('룬 개수',ul(Object.entries(LIMIT).map(([c,n])=>c+' 룬은 '+n+'개까지')),p('한 번에 최대 5개까지 쌓을 수 있어서, 원소를 3개 넣으면 술식과 발현은 합쳐서 2개까지예요. 같은 룬을 두 번 넣어도 개수에 들어가요(예: 불 + 불). 개수를 넘기면 조합에 실패해요.'));
+  card('원소 없는 조합',p('술식과 발현 룬만으로도 조합할 수 있어요. 이때는 순수한 마력으로 발현돼요.'));
   card('폭주',p('반대 의미의 룬을 함께 넣으면 조합은 되지만 폭주 능력이 돼요. 통제를 벗어나 주변과 시전자 모두에게 영향을 줄 수 있어요.'),ul(OPP.map(([a,b])=>rk(a)+' ↔ '+rk(b))));
   card('원소 상성',ul(CLASH.map(([[a,b],t])=>rk(a)+' + '+rk(b)+': '+t)),p('상성은 능력 설명에만 나타나고 위력에는 영향을 주지 않아요.'));
-  card('위력',ul(['기본 위력: 원소 1개당 '+BASE+' (원소가 없으면 '+NOEL+')','효과 룬 1개마다 ×'+MUL_EF,'형태 룬이 있으면 ×'+MUL_FO]),p('예: 불 + 불 + 증폭 = 20 × 1.5 = 30, 물 + 치유 + 영역 = 10 × 1.5 × 2 = 30. 소수점은 반올림해서 보여줘요.'));
-  card('등급',ul(GRADE.slice(1).map((g,i)=>g+': 위력 '+GRANGE[i+1])),p('가장 높은 위력은 90이에요. 원소 3개 + 효과 1개 + 형태, 또는 원소 2개 + 효과 2개 + 형태로 만들 수 있어요.'));
+  card('위력',ul(['기본 위력: 원소 1개당 '+BASE+' (원소가 없으면 '+NOEL+')','술식 룬 1개마다 ×'+MUL_EF,'발현 룬이 있으면 ×'+MUL_FO]),p('예: 불 + 불 + 증폭 = 20 × 1.5 = 30, 물 + 치유 + 영역 = 10 × 1.5 × 2 = 30. 소수점은 반올림해서 보여줘요.'));
+  card('등급',ul(GRADE.slice(1).map((g,i)=>g+': 위력 '+GRANGE[i+1])),p('가장 높은 위력은 90이에요. 원소 3개 + 술식 1개 + 발현, 또는 원소 2개 + 술식 2개 + 발현으로 만들 수 있어요.'));
 }
 /* 룬 쓰기: 그리기 판 */
 let wStrokes=[],wCur=null,wTimer=null,wLast=null,padCtx=null,padSize=0;
@@ -606,8 +608,8 @@ const gIx=g=>D.findIndex(r=>r[0]===g);
 const WHINT='룬 하나를 그리고 잠시 기다리면 알아보고 조합에 넣어요.';
 function setupPad(){
   const c=$('#pad'),w=($('#v-write').clientWidth||320)-80; /* 오른쪽 '다른 룬' 칸 자리를 남겨요 */
-  if(!$('#wgrid').childElementCount)['원소','효과','형태'].forEach(c=>{
-    const rows=D.filter(r=>r[3]===c),h=el('div','wcat',c+' '+rows.length),g=el('div','wgrid');h.dataset.c=c;
+  if(!$('#wgrid').childElementCount)['원소','술식','발현'].forEach(c=>{
+    const rows=D.filter(r=>r[3]===c).sort((a,b)=>(GORD[a[4]]||0)-(GORD[b[4]]||0)),h=el('div','wcat',c+' '+rows.length),g=el('div','wgrid');h.dataset.c=c;
     rows.forEach(r=>{const d=el('div');d.dataset.c=c;d.dataset.g=r[4]||c;d.append(el('b',null,r[0]),r[2]);g.append(d)});
     $('#wgrid').append(h,g);
   });
